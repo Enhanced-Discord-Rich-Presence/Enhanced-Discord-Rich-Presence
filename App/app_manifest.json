@@ -1,0 +1,7 @@
+{
+  "name": "com.enhanced.rpc.bridge",
+  "description": "Enhanced Discord Rich Presence Bridge",
+  "path": "C:\\Users\\Aqusorias\\AppData\\Local\\Enhanced Discord RPC\\bridge.bat",
+  "type": "stdio",
+  "allowed_extensions": ["2ab011842cebb01f81d1bafe44306ff18d7e2f82@temporary-addon"]
+}
