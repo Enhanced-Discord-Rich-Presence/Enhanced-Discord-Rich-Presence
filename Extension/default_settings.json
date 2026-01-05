@@ -1,0 +1,152 @@
+{
+  "rpcEnabled": true,
+  "informationPopups": true,
+  "rpcYoutube": {
+    "showPausedRpc": true,
+    "browsingActivities": {
+      "enabled": true,
+      "expanded": false,
+      "activities": {
+        "homepage": { "enabled": true, "text": "Browsing YouTube" },
+        "channel": { "enabled": true, "text": "Viewing %channel%'s Channel" },
+        "shorts": { "enabled": true, "text": "Watching Shorts" },
+        "search": { "enabled": true, "text": "Searching for: %query%" },
+        "subscriptions": { "enabled": true, "text": "Checking Subscriptions" },
+        "library": { "enabled": true, "text": "Browsing Library" },
+        "history": { "enabled": true, "text": "Viewing Watch History" },
+        "watchLater": { "enabled": true, "text": "Browsing Watch Later" },
+        "likedVideos": { "enabled": true, "text": "Viewing Liked Videos" },
+        "playlist": { "enabled": true, "text": "Browsing Playlist: %playlist%" },
+        "studio": { "enabled": true, "text": "Managing Channel" }
+      }
+    },
+    "running": {
+      "enabled": true,
+      "name": "Youtube",
+      "type": 3,
+      "details": "%title%",
+      "state": "By %author%",
+      "special": {
+        "details_url": { "enabled": false, "url": "" },
+        "state_url": { "enabled": false, "url": "" },
+        "large_image_url": { "enabled": true, "url": "%url%" },
+        "small_image_url": { "enabled": true, "url": "%author_url%" },
+        "custom_name": false
+      },
+      "timestamps": { "start": true, "end": true },
+      "assets": {
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "small": { "enabled": true, "small_image": "%author_avatar%", "small_text": "%author%" }
+      },
+      "buttons": {
+        "1": { "enabled": true, "label": "Watch on YouTube", "url": "%url%" },
+        "2": { "enabled": false, "label": "Channel Page", "url": "%author_url%" }
+      }
+    },
+    "paused": {
+      "enabled": true,
+      "type": 3,
+      "details": "PAUSED: %title%",
+      "state": "By %author%",
+      "special": {
+        "details_url": { "enabled": false, "url": "" },
+        "state_url": { "enabled": false, "url": "" },
+        "large_image_url": { "enabled": true, "url": "%url%" },
+        "small_image_url": { "enabled": true, "url": "%author_url%" }
+      },
+      "timestamps": { "start": false, "end": false },
+      "assets": {
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "small": { "enabled": true, "small_image": "%author_avatar%", "small_text": "%author%" }
+      },
+      "buttons": {
+        "1": { "enabled": true, "label": "Watch on YouTube", "url": "%url%" },
+        "2": { "enabled": false, "label": "Channel Page", "url": "%author_url%" }
+      }
+    }
+  },
+  "rpcYoutubeMusic": {
+    "showPausedRpc": true,
+    "browsingActivities": {
+      "enabled": true,
+      "expanded": false,
+      "activities": {
+        "homepage": { "enabled": true, "text": "Browsing YouTube Music" },
+        "explore": { "enabled": true, "text": "Exploring Music" },
+        "library": { "enabled": true, "text": "Browsing Library" },
+        "search": { "enabled": true, "text": "Searching for: %query%" },
+        "playlist": { "enabled": true, "text": "Browsing Playlist: %playlist%" },
+        "album": { "enabled": true, "text": "Browsing Album: %playlist%" },
+        "artist": { "enabled": true, "text": "Viewing %channel%" },
+        "channel": { "enabled": true, "text": "Viewing %channel%" }
+      }
+    },
+    "running": {
+      "enabled": true,
+      "name": "Youtube Music",
+      "type": 2,
+      "details": "%title%",
+      "state": "By %author%",
+      "special": {
+        "details_url": { "enabled": false, "url": "" },
+        "state_url": { "enabled": false, "url": "" },
+        "large_image_url": { "enabled": true, "url": "%url%" },
+        "small_image_url": { "enabled": false, "url": "" },
+        "custom_name": false
+      },
+      "timestamps": { "start": true, "end": true },
+      "assets": {
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "small": { "enabled": false, "small_image": "", "small_text": "" }
+      },
+      "buttons": {
+        "1": { "enabled": true, "label": "Listen on YouTube Music", "url": "%url%" },
+        "2": { "enabled": false, "label": "", "url": "" }
+      }
+    },
+    "paused": {
+      "enabled": true,
+      "type": 2,
+      "details": "PAUSED: %title%",
+      "state": "By %author%",
+      "special": {
+        "details_url": { "enabled": false, "url": "" },
+        "state_url": { "enabled": false, "url": "" },
+        "large_image_url": { "enabled": true, "url": "%url%" },
+        "small_image_url": { "enabled": false, "url": "" }
+      },
+      "timestamps": { "start": false, "end": false },
+      "assets": {
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "small": { "enabled": false, "small_image": "", "small_text": "" }
+      },
+      "buttons": {
+        "1": { "enabled": true, "label": "Listen on YouTube Music", "url": "%url%" },
+        "2": { "enabled": false, "label": "", "url": "" }
+      }
+    }
+  },
+  "rpcCustom": {
+      "enabled": false,
+      "name": "CustomRPC",
+      "type": 3,
+      "details": "Doing Cool Stuff",
+      "state": "Custom Rich Presence Active",
+      "special": {
+        "details_url": { "enabled": false, "url": "" },
+        "state_url": { "enabled": false, "url": "" },
+        "large_image_url": { "enabled": false, "url": "" },
+        "small_image_url": { "enabled": false, "url": "" },
+        "custom_name": true
+      },
+      "timestamps": { "start": true, "end": false },
+      "assets": {
+        "large": { "enabled": true, "large_image": "https://fonts.gstatic.com/s/e/notoemoji/latest/1f916/512.gif", "large_text": "My Custom Activity" },
+        "small": { "enabled": false, "small_image": "", "small_text": "" }
+      },
+      "buttons": {
+        "1": { "enabled": true, "label": "Click Me!", "url": "https://youtu.be/dQw4w9WgXcQ?si=Ybjs0P4umB0qA52t" },
+        "2": { "enabled": false, "label": "", "url": "" }
+      }
+    }
+}

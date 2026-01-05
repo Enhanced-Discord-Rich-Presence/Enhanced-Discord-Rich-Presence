@@ -1,79 +1,66 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <style>
-    body { width: 420px; font-family: -apple-system, sans-serif; padding: 15px; background: #f8f9fa; color: #333; }
-    h2 { font-size: 16px; margin-bottom: 15px; color: #d32f2f; text-align: center; }
-    .section { background: white; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
-    h3 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: #666; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    .group { margin-bottom: 10px; padding: 8px; background: #fcfcfc; border: 1px dashed #ccc; border-radius: 4px; }
-    .row { display: flex; align-items: center; justify-content: space-between; margin: 5px 0; gap: 10px; }
-    label { font-size: 11px; font-weight: 600; flex: 1; }
-    input[type="text"], input[type="number"] { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; }
-    .wide { width: 100%; margin-top: 2px; margin-bottom: 5px; box-sizing: border-box; }
-    .footer { position: sticky; bottom: 0; background: #f8f9fa; padding-top: 10px; }
-    .btn-save { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-    .btn-save:hover { background: #218838; }
-    .url-valid { border-color: #28a745 !important; }
-    .url-invalid { border-color: #d32f2f !important; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enhanced RPC Configuration</title>
+<link rel="stylesheet" href="popup.css">
+
+
 </head>
 <body>
-  <h2>Advanced Monitor Config</h2>
+<div class="app-container">
 
-  <div class="section">
-    <h3>Global</h3>
-    <div class="row"><label>RPC Master Switch</label><input type="checkbox" id="rpcEnabled"></div>
-    <div class="row"><label>Info Popups</label><input type="checkbox" id="informationPopups"></div>
-  </div>
+    <header>
+        <h1 class="logo">
+            <div id="rpc-status-dot" class="status-dot active"></div>
+            Enhanced<span style="color: var(--indigo-500)">RPC</span>
+        </h1>
+        <button id="master-power" class="btn-power on">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+        </button>
+    </header>
 
-  <div id="settings-container">
-    <div class="section" id="section_yt">
-      <h3>YouTube (Main)</h3>
-      <div class="row"><label>Enabled</label><input type="checkbox" id="yt_enabled"></div>
-      <div class="row"><label>Type (0, 2, 3)</label><input type="number" id="yt_type"></div>
-      <label>Details</label><input type="text" id="yt_details" class="wide">
-      <label>State</label><input type="text" id="yt_state" class="wide">
-      
-      <div class="group">
-        <label>Assets (Large / Small)</label>
-        <div class="row">L: <input type="checkbox" id="yt_l_en"> <input type="text" id="yt_l_img" placeholder="Img URL"> <input type="text" id="yt_l_txt" placeholder="Hover Text"></div>
-        <div class="row">S: <input type="checkbox" id="yt_s_en"> <input type="text" id="yt_s_img" placeholder="Img URL"> <input type="text" id="yt_s_txt" placeholder="Hover Text"></div>
-      </div>
-
-      <div class="group">
-        <label>Buttons (Label / URL)</label>
-        <div class="row">1: <input type="checkbox" id="yt_b1_en"> <input type="text" id="yt_b1_lab" placeholder="Label"> <input type="text" id="yt_b1_url" placeholder="URL"></div>
-        <div class="row">2: <input type="checkbox" id="yt_b2_en"> <input type="text" id="yt_b2_lab" placeholder="Label"> <input type="text" id="yt_b2_url" placeholder="URL"></div>
-      </div>
+    <div id="update-banner" class="update-banner" style="display:none">
+        <div class="update-banner__text">
+            <span class="update-banner__title">App update available</span>
+        </div>
+        <button id="update-banner-link" class="update-banner__link" type="button">Download</button>
     </div>
 
-    <div class="section" id="section_ytm">
-      <h3>YouTube Music</h3>
-      <div class="row"><label>Enabled</label><input type="checkbox" id="ytm_enabled"></div>
-      <div class="row"><label>Type (0, 2, 3)</label><input type="number" id="ytm_type"></div>
-      <label>Details</label><input type="text" id="ytm_details" class="wide">
-      <label>State</label><input type="text" id="ytm_state" class="wide">
-      
-      <div class="group">
-        <label>Assets (Large / Small)</label>
-        <div class="row">L: <input type="checkbox" id="ytm_l_en"> <input type="text" id="ytm_l_img" placeholder="Img URL"> <input type="text" id="ytm_l_txt" placeholder="Hover Text"></div>
-        <div class="row">S: <input type="checkbox" id="ytm_s_en"> <input type="text" id="ytm_s_img" placeholder="Img URL"> <input type="text" id="ytm_s_txt" placeholder="Hover Text"></div>
-      </div>
-
-      <div class="group">
-        <label>Buttons (Label / URL)</label>
-        <div class="row">1: <input type="checkbox" id="ytm_b1_en"> <input type="text" id="ytm_b1_lab" placeholder="Label"> <input type="text" id="ytm_b1_url" placeholder="URL"></div>
-        <div class="row">2: <input type="checkbox" id="ytm_b2_en"> <input type="text" id="ytm_b2_lab" placeholder="Label"> <input type="text" id="ytm_b2_url" placeholder="URL"></div>
-      </div>
+    <div class="quick-toggles">
+        <div id="toggle-status" class="toggle-card">    
+            <span class="toggle-label">RPC STATUS</span>
+            <div class="toggle-value">
+                <div id="status-indicator" class="indicator" style="background: var(--green-500); box-shadow: 0 0 8px var(--green-500);"></div>
+                <span id="status-text" class="toggle-text">Activated</span>
+            </div>
+        </div>
+        <div id="toggle-popups" class="toggle-card">
+            <span class="toggle-label">Popups</span>
+            <div class="toggle-value">
+                <div id="popups-indicator" class="indicator" style="background: var(--indigo-500); box-shadow: 0 0 8px var(--indigo-500);"></div>
+                <span id="popups-text" class="toggle-text">Enabled</span>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="footer">
-    <button class="btn-save" id="saveBtn">Apply All Changes</button>
-  </div>
+    <div id="main-content" class="custom-scrollbar">
+        <div id="platforms-container"></div>
+    </div>
 
-  <script src="popup.js"></script>
+    <div id="footer-actions" class="footer-actions">
+        <button id="btn-reload-presence" class="btn-primary">Reload Presence</button>
+        <button id="btn-toast-trigger" class="btn-settings" type="button" title="Select active tab for RPC" aria-label="Select the currently active YouTube/YouTube Music tab for RPC">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path d="M14 10a1.5 1.5 0 0 0-2-1"/>
+            </svg>
+        </button>
+    </div>
+</div>
+<script src="popup.js"></script>
+
+
 </body>
 </html>

@@ -6,18 +6,19 @@
 AppName=Enhanced Discord RPC
 AppId={{3879D6CE-2CFB-457E-B3F6-592678F9A251}}
 AppVersion={#MyAppVersion}
-VersionInfoVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Enhanced Discord RPC
 DefaultGroupName=Enhanced Discord RPC
 UninstallDisplayIcon={app}\bridge.exe
+SetupIconFile=Extension\src\icons\icon.ico
 AppMutex=EnhancedDiscordRPC_Mutex
 Compression=lzma2
 DisableWelcomePage=no
 WizardStyle=modern
 SolidCompression=yes
-OutputDir=userdocs:Inno Setup Examples Output
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+OutputDir=Releases
+OutputBaseFilename=Enhanced_RPC_Installer_{#MyAppVersion}
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 CloseApplications=yes
 

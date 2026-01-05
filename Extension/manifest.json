@@ -2,19 +2,26 @@
   "manifest_version": 3,
   "name": "Enhanced Discord Rich Presence",
   "version": "1.0.0",
-  "browser_specific_settings": {
+  "icons": {
+    "48": "src/icons/icon.png",
+    "96": "src/icons/icon.png"
+  },
+    "browser_specific_settings": {
     "gecko": {
-      "id": "2ab011842cebb01f81d1bafe44306ff18d7e2f82@temporary-addon"
+      "id": "enhanced_discord_rich_presence@enhncddrpc.org",
+      "data_collection_permissions": {
+        "required": ["none"],
+        "optional": []
+      }
     }
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["toast.html"],
-      "matches": ["*://*.youtube.com/*"]
-    }
-  ],
   "permissions": ["tabs", "storage", "nativeMessaging"],
-  "host_permissions": ["*://*.youtube.com/*", "*://music.youtube.com/*"],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "*://music.youtube.com/*",
+    "*://github.com/*",
+    "*://raw.githubusercontent.com/*"
+  ],
   "background": {
     "scripts": ["background.js"]
   },
@@ -22,6 +29,12 @@
     "default_popup": "popup.html",
     "default_title": "Monitor Settings"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/icons/icon.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["*://music.youtube.com/*"],
@@ -31,6 +44,11 @@
     {
       "matches": ["*://*.youtube.com/*"],
       "js": ["Activities/Youtube.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
       "run_at": "document_idle"
     }
   ]

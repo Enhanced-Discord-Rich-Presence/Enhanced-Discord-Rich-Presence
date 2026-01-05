@@ -1,6 +1,22 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Build Artifacts
 App/dist/
 App/build/
-App/*.spec
+App/bridge_DEV.spec
+App/build.bat
+App/build_DEV.bat
+
+# Release Builds
+Releases/
+
+# Development
+setup.iss
+VERSIONING.md
+todo.txt
+
+# Configuration
+.github
