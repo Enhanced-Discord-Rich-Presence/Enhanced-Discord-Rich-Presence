@@ -3,7 +3,14 @@ import json
 import os
 import struct
 import time
-import win32file
+import platform
+
+_IS_WINDOWS = platform.system() == "Windows"
+
+if _IS_WINDOWS:
+    import win32file
+else:
+    import socket
 from urllib.parse import urlparse, parse_qs
 
 
@@ -44,34 +51,64 @@ class MultiServiceBridge:
 
         for i in range(10):
             try:
-                pipe_name = rf"\\.\pipe\discord-ipc-{i}"
-                pipe = win32file.CreateFile(
-                    pipe_name,
-                    win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-                    0,
-                    None,
-                    win32file.OPEN_EXISTING,
-                    win32file.FILE_FLAG_OVERLAPPED | win32file.FILE_ATTRIBUTE_NORMAL,
-                    None
-                )
-                
+                if _IS_WINDOWS:
+                    pipe = self._open_windows_pipe(i)
+                else:
+                    pipe = self._open_unix_socket(i)
+
                 self._send_frame(pipe, 0, {"v": 1, "client_id": client_id})
                 time.sleep(1)
-                
+
                 self.pipes[service_type] = pipe
                 return pipe
             except Exception:
                 continue
         return None
+
+    def _open_windows_pipe(self, index):
+        pipe_name = rf"\\.\pipe\discord-ipc-{index}"
+        return win32file.CreateFile(
+            pipe_name,
+            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+            0,
+            None,
+            win32file.OPEN_EXISTING,
+            win32file.FILE_FLAG_OVERLAPPED | win32file.FILE_ATTRIBUTE_NORMAL,
+            None
+        )
+
+    def _open_unix_socket(self, index):
+        sock_name = f"discord-ipc-{index}"
+        candidates = []
+        xdg = os.environ.get("XDG_RUNTIME_DIR")
+        if xdg:
+            candidates.append(os.path.join(xdg, sock_name))
+        tmpdir = os.environ.get("TMPDIR")
+        if tmpdir:
+            candidates.append(os.path.join(tmpdir, sock_name))
+        candidates.append(os.path.join("/tmp", sock_name))
+
+        for path in candidates:
+            if os.path.exists(path):
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.connect(path)
+                return sock
+        raise FileNotFoundError(f"Discord IPC socket not found for index {index}")
     
     def _send_frame(self, pipe, op, payload):
         if not pipe: return
         try:
             data = json.dumps(payload).encode("utf-8")
             header = struct.pack("<II", op, len(data))
-            win32file.WriteFile(pipe, header + data)
+            if _IS_WINDOWS:
+                win32file.WriteFile(pipe, header + data)
+            else:
+                pipe.sendall(header + data)
         except Exception:
-            pass
+            for service, cached_pipe in list(self.pipes.items()):
+                if cached_pipe is pipe:
+                    del self.pipes[service]
+                    break
     
     def _interpolate_placeholders(self, text, payload):
         if text is None: return ""

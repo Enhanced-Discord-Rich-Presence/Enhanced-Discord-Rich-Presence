@@ -1,5 +1,5 @@
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](App/version.txt) [![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](#) [![Firefox](https://img.shields.io/badge/Firefox-WebExtension-orange.svg)](#)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](App/version.txt) [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-blue.svg)](#) [![Firefox](https://img.shields.io/badge/Firefox-WebExtension-orange.svg)](#)
 
 <table align="center">
   <tr>
@@ -54,17 +54,35 @@
 
 ### Prerequisites
 
-- **Windows 10/11** (Windows only for now)
+- **Windows 10/11** or **macOS** (Apple Silicon / Intel)
 - **Firefox**
 - **Discord**
 
 ### Step 1: Download the Native App
+
+#### Windows
 
 1. Go to the [Releases page](../../releases/latest)
 2. Download `Enhanced_RPC_Installer_[version].exe`
 3. Run the installer and follow the on-screen instructions
    - The installer will:
      - Extract the native app to your system
+     - Register it with Firefox for native messaging
+
+#### macOS
+
+1. Go to the [Releases page](../../releases/latest) and download the macOS release, or build from source:
+   ```bash
+   pip3 install pyinstaller
+   cd App && python3 -m PyInstaller bridge.spec
+   ```
+2. Run the installer script from the project root:
+   ```bash
+   chmod +x install_macos.sh
+   ./install_macos.sh
+   ```
+   - The script will:
+     - Install the native app to `~/Library/Application Support/Enhanced Discord RPC/`
      - Register it with Firefox for native messaging
 
 ### Step 2: Install the Firefox Extension
@@ -106,9 +124,16 @@
 
 ### Remove the Native App
 
+#### Windows
 1. Open **Settings → Apps → Installed Apps** (Windows 11) or **Control Panel → Programs → Programs and Features** (Windows 10)
 2. Find "Enhanced Discord RPC version x.y.z"
 3. Click **Uninstall** and follow the prompts
+
+#### macOS
+```bash
+chmod +x uninstall_macos.sh
+./uninstall_macos.sh
+```
 
 
 ---
