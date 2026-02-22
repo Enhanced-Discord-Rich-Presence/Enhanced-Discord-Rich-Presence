@@ -195,6 +195,25 @@ function detectPageType() {
 	return null;
 }
 
+function isMusicCurrentlyPlaying() {
+	const media = document.querySelector('audio, video');
+	if (media && !media.paused && !media.ended) return true;
+
+	const playPauseBtn = document.querySelector('ytmusic-player-bar tp-yt-paper-icon-button.play-pause-button, ytmusic-player-bar #play-pause-button, ytmusic-player-bar button[aria-label], ytmusic-player-bar button[title]');
+	if (!playPauseBtn) return false;
+
+	const buttonText = [
+		playPauseBtn.getAttribute('aria-label'),
+		playPauseBtn.getAttribute('title'),
+		playPauseBtn.getAttribute('data-title-no-tooltip')
+	].filter(Boolean).join(' ').toLowerCase();
+
+	if (buttonText.includes('pause')) return true;
+	if (buttonText.includes('play')) return false;
+
+	return false;
+}
+
 async function checkBrowsingActivity() {
 	const pageInfo = detectPageType();
 	if (!pageInfo) return;
@@ -202,6 +221,9 @@ async function checkBrowsingActivity() {
 	const informationPopups = cachedInformationPopups;
 	const rpcYoutubeMusic = cachedRpcYoutubeMusic;
 	if (!rpcYoutubeMusic) return;
+
+	const showSongWhileBrowsing = rpcYoutubeMusic.showSongWhileBrowsing !== false;
+	if (showSongWhileBrowsing && isMusicCurrentlyPlaying()) return;
 
 	const browsingActivities = rpcYoutubeMusic.browsingActivities
 		|| rpcYoutubeMusic.paused?.browsingActivities
@@ -220,12 +242,26 @@ async function checkBrowsingActivity() {
 		lastBrowsingActivityKey = activityKey;
 		lastBrowsingActivityText = activityData.text;
 
+		const pausedCfg = rpcYoutubeMusic.paused || {};
+		const runningCfg = rpcYoutubeMusic.running || {};
 		const baseCfg = rpcYoutubeMusic.paused || rpcYoutubeMusic.running || rpcYoutubeMusic;
 		const settings = {
 			...baseCfg,
 			details: BROWSING_ACTIVITY_LABELS[activityKey] || "Browsing YouTube Music",
 			state: activityData.text
 		};
+
+		const pausedCustom = pausedCfg.special?.custom_name === true;
+		const runningCustom = runningCfg.special?.custom_name === true;
+		if (pausedCustom || runningCustom) {
+			settings.special = {
+				...(settings.special || {}),
+				custom_name: true
+			};
+			settings.name = pausedCustom
+				? pausedCfg.name
+				: (runningCfg.name || settings.name);
+		}
 
 		if (settings.buttons) {
 			settings.buttons = {

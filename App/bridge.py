@@ -34,6 +34,15 @@ class MultiServiceBridge:
         self.tab_to_service = {}       # tabId -> service
         self.last_payload_by_tab = {}  # tabId -> {message_data}
         self.selected_tab = {}         # service -> tabId
+
+    def _invalidate_pipe(self, service_type):
+        pipe = self.pipes.pop(service_type, None)
+        if not pipe:
+            return
+        try:
+            win32file.CloseHandle(pipe)
+        except Exception:
+            pass
     
     def _get_pipe(self, service_type):
         if service_type in self.pipes:
@@ -55,7 +64,12 @@ class MultiServiceBridge:
                     None
                 )
                 
-                self._send_frame(pipe, 0, {"v": 1, "client_id": client_id})
+                if not self._send_frame(pipe, 0, {"v": 1, "client_id": client_id}, service_type=service_type):
+                    try:
+                        win32file.CloseHandle(pipe)
+                    except Exception:
+                        pass
+                    continue
                 time.sleep(1)
                 
                 self.pipes[service_type] = pipe
@@ -64,14 +78,17 @@ class MultiServiceBridge:
                 continue
         return None
     
-    def _send_frame(self, pipe, op, payload):
+    def _send_frame(self, pipe, op, payload, service_type=None):
         if not pipe: return
         try:
             data = json.dumps(payload).encode("utf-8")
             header = struct.pack("<II", op, len(data))
             win32file.WriteFile(pipe, header + data)
+            return True
         except Exception:
-            pass
+            if service_type:
+                self._invalidate_pipe(service_type)
+            return False
     
     def _interpolate_placeholders(self, text, payload):
         if text is None: return ""
@@ -245,11 +262,16 @@ class MultiServiceBridge:
             if timestamps: activity["timestamps"] = timestamps            
             if btns: activity["buttons"] = btns
 
-            self._send_frame(pipe, 1, {
+            frame = {
                 "cmd": "SET_ACTIVITY",
                 "args": {"pid": os.getpid(), "activity": activity},
                 "nonce": str(now)
-            })
+            }
+
+            if not self._send_frame(pipe, 1, frame, service_type=service):
+                retry_pipe = self._get_pipe(service)
+                if retry_pipe:
+                    self._send_frame(retry_pipe, 1, frame, service_type=service)
         except Exception:
             pass
 
@@ -271,7 +293,7 @@ class MultiServiceBridge:
                     "cmd": "SET_ACTIVITY",
                     "args": {"pid": os.getpid(), "activity": None},
                     "nonce": str(int(time.time()))
-                })
+                }, service_type=service)
 
     def send_to_extension(self, message):
         try:
@@ -401,9 +423,19 @@ def main():
                                 if chosen:
                                     activity_key, activity_data = chosen
 
-                                    base_config = youtube_settings.get("paused", {}).copy()
+                                    paused_cfg = youtube_settings.get("paused", {})
+                                    running_cfg = youtube_settings.get("running", {})
+                                    base_config = paused_cfg.copy()
                                     base_config["details"] = BROWSING_ACTIVITY_LABELS.get(activity_key, "Browsing YouTube")
                                     base_config["state"] = activity_data.get("text", "")
+
+                                    paused_custom = (paused_cfg.get("special") or {}).get("custom_name") is True
+                                    running_custom = (running_cfg.get("special") or {}).get("custom_name") is True
+                                    if paused_custom or running_custom:
+                                        special = base_config.get("special") or {}
+                                        special["custom_name"] = True
+                                        base_config["special"] = special
+                                        base_config["name"] = paused_cfg.get("name") if paused_custom else (running_cfg.get("name") or base_config.get("name"))
 
                                     btns = base_config.get("buttons") or {}
                                     for k in ("1", "2"):
@@ -455,14 +487,14 @@ def main():
                         "cmd": "SET_ACTIVITY",
                         "args": {"pid": os.getpid(), "activity": None},
                         "nonce": str(int(time.time()))
-                    })
+                    }, service_type=service_to_clear)
             elif action == "CLEAR_RPC":
                 for service, pipe in bridge.pipes.items():
                     bridge._send_frame(pipe, 1, {
                         "cmd": "SET_ACTIVITY",
                         "args": {"pid": os.getpid(), "activity": None},
                         "nonce": str(int(time.time()))
-                    })
+                    }, service_type=service)
                 bridge.selected_tab.clear()
             elif action == "GET_STATUS":
                 bridge.send_to_extension({

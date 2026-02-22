@@ -22,7 +22,7 @@
     },
     "running": {
       "enabled": true,
-      "name": "Youtube",
+      "name": "YouTube",
       "type": 3,
       "details": "%title%",
       "state": "By %author%",
@@ -31,7 +31,7 @@
         "state_url": { "enabled": false, "url": "" },
         "large_image_url": { "enabled": true, "url": "%url%" },
         "small_image_url": { "enabled": true, "url": "%author_url%" },
-        "custom_name": false
+        "custom_name": true
       },
       "timestamps": { "start": true, "end": true },
       "assets": {
@@ -67,6 +67,7 @@
   },
   "rpcYoutubeMusic": {
     "showPausedRpc": true,
+    "showSongWhileBrowsing": true,
     "browsingActivities": {
       "enabled": true,
       "expanded": false,
@@ -83,7 +84,7 @@
     },
     "running": {
       "enabled": true,
-      "name": "Youtube Music",
+      "name": "YouTube Music",
       "type": 2,
       "details": "%title%",
       "state": "By %author%",
@@ -92,7 +93,7 @@
         "state_url": { "enabled": false, "url": "" },
         "large_image_url": { "enabled": true, "url": "%url%" },
         "small_image_url": { "enabled": false, "url": "" },
-        "custom_name": false
+        "custom_name": true
       },
       "timestamps": { "start": true, "end": true },
       "assets": {

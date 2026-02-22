@@ -317,12 +317,26 @@ async function checkBrowsingActivity() {
         lastBrowsingActivityKey = activityKey;
         lastBrowsingActivityText = activityData.text;
 
+        const pausedCfg = rpcYoutube.paused || {};
+        const runningCfg = rpcYoutube.running || {};
         const baseCfg = rpcYoutube.paused || rpcYoutube.running || {};
         const settings = {
             ...baseCfg,
             details: BROWSING_ACTIVITY_LABELS[activityKey] || "Browsing YouTube",
             state: activityData.text
         };
+
+        const pausedCustom = pausedCfg.special?.custom_name === true;
+        const runningCustom = runningCfg.special?.custom_name === true;
+        if (pausedCustom || runningCustom) {
+            settings.special = {
+                ...(settings.special || {}),
+                custom_name: true
+            };
+            settings.name = pausedCustom
+                ? pausedCfg.name
+                : (runningCfg.name || settings.name);
+        }
 
         if (settings.buttons) {
             settings.buttons = {

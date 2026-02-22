@@ -52,6 +52,7 @@ let state = {
             editingMode: 'running',
             enabled: true,
             showPausedRpc: true,
+            showSongWhileBrowsing: true,
             type: 'Listening',
             activityName: { enabled: false, name: 'YouTube Music' },
             details: { text: '%title%', url: '%url%', urlEnabled: true },
@@ -312,6 +313,15 @@ function render() {
                                 </label>
                                 <span class="setting-option-text">Show RPC while paused</span>
                             </div>
+                            ${id === 'youtubeMusic' ? `
+                                <div class="setting-option" title="When enabled, browsing pages in YouTube Music will keep showing the current song RPC while playback continues.">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" class="show-song-while-browsing-toggle" data-id="${id}" ${cfg.showSongWhileBrowsing !== false ? 'checked' : ''}>
+                                        <div class="checkbox-custom">${SVGS['check']}</div>
+                                    </label>
+                                    <span class="setting-option-text">Show song RPC while browsing</span>
+                                </div>
+                            ` : ''}
                         </div>
                     ` : ''}
 
@@ -359,15 +369,17 @@ function render() {
     });
 
     const alertPopup = `
-        <div class="alert-container">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <p class="alert-text">
-                Remember you can't see Buttons from your own Account anymore.
-            </p>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+            <div class="alert-container">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="alert-icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p class="alert-text">
+                    Remember you can't see Buttons from your own Account anymore.
+                </p>
+            </div>
         </div>
     `;
     container.insertAdjacentHTML('beforeend', alertPopup);
@@ -1197,6 +1209,11 @@ function attachListeners() {
                 if (storedCfg.showPausedRpc !== undefined) {
                     state.configs[sectionKey].showPausedRpc = storedCfg.showPausedRpc;
                 }
+                if (sectionKey === 'youtubeMusic') {
+                    state.configs[sectionKey].showSongWhileBrowsing = storedCfg.showSongWhileBrowsing !== undefined
+                        ? storedCfg.showSongWhileBrowsing
+                        : true;
+                }
             } else {
                 console.warn(`No data found in storage for ${id} ${newMode} mode.`);
             }
@@ -1273,6 +1290,26 @@ function attachListeners() {
             if (!id) return;
             state.configs[id].showPausedRpc = e.target.checked;
             setStorageData('showPausedRpc', e.target.checked);
+
+            if (state.rpcEnabled && state.configs[id].enabled) {
+                browser.runtime.sendMessage({
+                    action: "TRIGGER_SYNC",
+                    enabled: true,
+                    platform: id
+                });
+            }
+
+            render();
+        };
+    });
+
+    document.querySelectorAll('.show-song-while-browsing-toggle').forEach(checkbox => {
+        checkbox.onchange = (e) => {
+            const id = checkbox.getAttribute('data-id') || state.expandedSection;
+            if (id !== 'youtubeMusic') return;
+
+            state.configs[id].showSongWhileBrowsing = e.target.checked;
+            setStorageData('showSongWhileBrowsing', e.target.checked);
 
             if (state.rpcEnabled && state.configs[id].enabled) {
                 browser.runtime.sendMessage({
@@ -1745,7 +1782,7 @@ async function setStorageData(path, newVal) {
 
         let target;
         if (dataSection === "rpcYoutube" || dataSection === "rpcYoutubeMusic") {
-            if (path === 'showPausedRpc' || path.startsWith('browsingActivities.')) {
+            if (path === 'showPausedRpc' || path === 'showSongWhileBrowsing' || path.startsWith('browsingActivities.')) {
                 target = rootObj;
             } else {
                 const mode = state.configs[state.expandedSection]?.editingMode || 'running';
@@ -1841,6 +1878,7 @@ window.onload = async () => {
 
                 const rpcYoutubeMusic = {
                     showPausedRpc: legacy.showPausedRpc !== undefined ? legacy.showPausedRpc : true,
+                    showSongWhileBrowsing: legacy.showSongWhileBrowsing !== undefined ? legacy.showSongWhileBrowsing : true,
                     browsingActivities: legacy.browsingActivities,
                     running,
                     paused
@@ -1852,6 +1890,9 @@ window.onload = async () => {
 
             state.configs.youtubeMusic.showPausedRpc = stored.rpcYoutubeMusic.showPausedRpc !== undefined
                 ? stored.rpcYoutubeMusic.showPausedRpc
+                : true;
+            state.configs.youtubeMusic.showSongWhileBrowsing = stored.rpcYoutubeMusic.showSongWhileBrowsing !== undefined
+                ? stored.rpcYoutubeMusic.showSongWhileBrowsing
                 : true;
 
             const currentMode = state.configs.youtubeMusic.editingMode;
