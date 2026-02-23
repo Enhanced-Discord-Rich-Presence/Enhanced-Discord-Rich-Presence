@@ -356,6 +356,39 @@ function extractVersion(text) {
     return m ? m[1].trim() : "";
 }
 
+function parseVersion(version) {
+    if (!version) return null;
+    const str = String(version).trim().toLowerCase();
+    const m = str.match(/^(pre-)?(\d+)\.(\d+)\.(\d+)$/);
+    if (!m) return null;
+
+    return {
+        isPre: !!m[1],
+        major: Number(m[2]),
+        minor: Number(m[3]),
+        patch: Number(m[4])
+    };
+}
+
+function compareVersions(a, b) {
+    const va = parseVersion(a);
+    const vb = parseVersion(b);
+
+    if (!va || !vb) {
+        return String(a || '').localeCompare(String(b || ''), undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    if (va.major !== vb.major) return va.major - vb.major;
+    if (va.minor !== vb.minor) return va.minor - vb.minor;
+    if (va.patch !== vb.patch) return va.patch - vb.patch;
+
+    if (va.isPre !== vb.isPre) {
+        return va.isPre ? -1 : 1;
+    }
+
+    return 0;
+}
+
 function isDisplayableUrl(url) {
     if (!url) return false;
     try {
@@ -515,7 +548,7 @@ async function checkForNativeAppUpdate() {
 
     const remoteVersion = extractVersion(remoteText);
     if (!remoteVersion) return;
-    if (remoteVersion === localVersion) {
+    if (compareVersions(remoteVersion, localVersion) <= 0) {
         updateAvailableStatus = null;
         dismissedUpdateKey = null;
         clearPendingUpdateModal();
