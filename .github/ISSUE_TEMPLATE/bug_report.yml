@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a bug or unexpected behavior.
+title: "[BUG]: <Short description of the bug>"
+labels: ["bug", "status: in-review"]
+assignees: ["Aqusorias"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue. Please fill out the fields below.
+  - type: dropdown
+    id: state
+    attributes:
+      label: State of the Extension and RPC
+      description: Which of the following best describe the current state of the extension and RPC?
+      options:
+        - The Extension and the RPC are both working 
+        - The Extension is working, but the RPC is not working
+        - Both are not working
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: problem
+    attributes:
+      label: Problem Description
+      description: With what exactly are you facing problems?
+      options:
+        - The Extension
+        - The RPC
+        - Both the Extension and the RPC
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Please describe your problem in detail.
+      placeholder: What exactly is the bug or unexpected behavior you're experiencing?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If possible, add screenshots to help explain your problem.
+      placeholder: Paste or drag screenshots here
+    validations:
+      required: false

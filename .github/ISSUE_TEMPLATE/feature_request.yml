@@ -1,0 +1,38 @@
+name: Enhancement / Feature Request
+description: Suggest an enhancement or new feature for the project.
+title: "[FEATURE]: <Short description of the feature>"
+labels: ["enhancement", "status: in-review"]
+assignees: ["Aqusorias"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement. Please fill out the fields below.
+  - type: dropdown
+    id: target
+    attributes:
+      label: Target of the Feature
+      description: Which of the following best describes where this feature should be added?
+      options:
+        - The Extension
+        - The RPC
+        - Both the Extension and the RPC
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Proposed Description
+      description: Please describe your feature idea in detail.
+      placeholder: How should this feature work from your perspective?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Mockups
+      description: If possible, add screenshots to help explain the feature.
+      placeholder: Paste or drag screenshots here
+    validations:
+      required: false
