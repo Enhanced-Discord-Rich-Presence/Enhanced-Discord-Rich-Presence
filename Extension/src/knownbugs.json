@@ -12,6 +12,10 @@
     {
       "title": "Youtube Music: Time Reset",
       "description": "If you seek in a song, minimize or maximize the window, it sets the time to 0 again. It resets when you pause and unpause or when the song changes."
+    },
+    {
+      "title": "Browsing Activities Popup",
+      "description": "Even if you disabled the RPC, it will still show the popup when it WOULD stream Brwosing Activities. It doesn't actually stream anything, but still shows it."
     }
   ]
 }
