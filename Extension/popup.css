@@ -525,6 +525,11 @@ input[type="text"]:focus {
     background: var(--indigo-700);
 }
 
+.btn-primary:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 .btn-settings {
     padding: 14px;
     background: var(--bg-white-05);
@@ -741,6 +746,87 @@ input[type="text"]:focus {
     text-transform: uppercase;
     letter-spacing: -0.025em;
     margin: 0;
+}
+
+.version-section {
+    display: flex;
+    align-items: center;
+    position: relative;
+    width: 322px;
+    height: 28px;
+    padding: 0;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: default;
+    overflow: hidden;
+}
+
+.version-content-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex: 1;
+    margin-right: 28px; 
+    margin-left: 28px;
+}
+
+.version-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.version-label {
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 8.5px;
+}
+
+.version-value {
+    color: #71717a;
+    font-family: ui-monospace, monospace;
+    font-weight: 500;
+}
+
+.version-divider {
+    width: 1px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.version-info-btn {
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #4b5563;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.version-info-btn:hover {
+    color: #a1a1aa;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.version-info-btn svg {
+    width: 13px;
+    height: 13px;
 }
 
 .timeline-option {

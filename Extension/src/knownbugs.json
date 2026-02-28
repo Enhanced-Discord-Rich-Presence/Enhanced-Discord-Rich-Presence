@@ -1,0 +1,13 @@
+{
+  "date": "2026-02-28",
+  "bugs": [
+    {
+      "title": "Youtube: Multiple Channels",
+      "description": "If the playing Youtube Video has multiple channels, it will says \"Unknown Author\"."
+    },
+    {
+      "title": "Youtube Music Popup",
+      "description": "Sometimes if Youtube Music streams the Browsing Activities and you leave and re-enter the page, it will show a popup. Don't worry it doesn't reset the time or so, it only shows you the TOAST again."
+    }
+  ]
+}

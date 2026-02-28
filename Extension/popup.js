@@ -100,6 +100,8 @@ let state = {
 
 let internalWarningInterval = null;
 let internalWarningHardTimeout = null;
+let versionInfoSnapshot = null;
+let versionInfoRequestInFlight = null;
 
 const SVGS = {
     'youtube-svg': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" fill="#FF0000"/><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#fff"/></svg>`,
@@ -111,8 +113,67 @@ const SVGS = {
     'link': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
     'type': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>`,
     'key': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3y-3.5"></path></svg>`,
-    'check': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>`
+    'check': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>`,
+    'info-circle': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
 };
+
+function normalizeVersion(value) {
+    const text = value == null ? '' : String(value).trim();
+    return text || 'Unavailable';
+}
+
+function applyVersionInfoToDom() {
+    const extensionInstalled = document.getElementById('version-extension-installed');
+    const appInstalled = document.getElementById('version-app-installed');
+
+    if (!extensionInstalled || !appInstalled) return;
+
+    if (!versionInfoSnapshot) {
+        extensionInstalled.textContent = 'Loading...';
+        appInstalled.textContent = 'Loading...';
+        return;
+    }
+
+    extensionInstalled.textContent = normalizeVersion(versionInfoSnapshot.installed?.extensionVersion);
+    appInstalled.textContent = normalizeVersion(versionInfoSnapshot.installed?.nativeAppVersion);
+}
+
+async function refreshVersionInfo(forceRefresh = false) {
+    if (versionInfoRequestInFlight && !forceRefresh) {
+        await versionInfoRequestInFlight;
+        return versionInfoSnapshot;
+    }
+
+    versionInfoRequestInFlight = (async () => {
+        try {
+            const info = await browser.runtime.sendMessage({
+                action: 'GET_VERSION_INFO',
+                includeLatest: false,
+                forceRefresh
+            });
+
+            if (info) {
+                versionInfoSnapshot = info;
+            }
+        } catch {
+            if (!versionInfoSnapshot) {
+                versionInfoSnapshot = {
+                    installed: { extensionVersion: '', nativeAppVersion: '' },
+                    latest: { extensionVersion: '', nativeAppVersion: '' }
+                };
+            }
+        }
+
+        applyVersionInfoToDom();
+        return versionInfoSnapshot;
+    })();
+
+    try {
+        return await versionInfoRequestInFlight;
+    } finally {
+        versionInfoRequestInFlight = null;
+    }
+}
 
 function getByteLength(str) {
     return new Blob([str]).size;
@@ -380,9 +441,32 @@ function render() {
                     Remember you can't see Buttons from your own Account anymore.
                 </p>
             </div>
+
+            <div class="version-section">
+                <div class="version-content-wrapper">
+                    <div class="version-group">
+                        <span class="version-label">Extension</span>
+                        <span id="version-extension-installed" class="version-value">V99.99.99</span>
+                    </div>
+                    
+                    <div class="version-divider"></div>
+
+                    <div class="version-group">
+                        <span class="version-label">Native</span>
+                        <span id="version-app-installed" class="version-value">V99.99.99</span>
+                    </div>
+                </div>
+
+                <button id="open-info" class="version-info-btn" type="button" title="Information">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </button>
+            </div>
         </div>
     `;
     container.insertAdjacentHTML('beforeend', alertPopup);
+    applyVersionInfoToDom();
 
     if (state.editingBrowsingActivity) {
         const activeSection = state.expandedSection;
@@ -1178,6 +1262,15 @@ function attachListeners() {
         icon.addEventListener('mouseleave', hideTooltip);
     });
 
+    const infoBtn = document.getElementById('open-info');
+    if (infoBtn) {
+        infoBtn.onclick = () => {
+            browser.tabs.create({
+                url: browser.runtime.getURL('pages/info.html')
+            });
+        };
+    }
+
     document.querySelectorAll('.play-pause-toggle').forEach(btn => {
         btn.onclick = async (e) => {
             e.stopPropagation(); 
@@ -1606,20 +1699,34 @@ document.getElementById('btn-toast-trigger').addEventListener('click', async () 
 
 document.addEventListener('DOMContentLoaded', () => {
     const reloadBtn = document.getElementById('btn-reload-presence');
+    if (!reloadBtn) return;
 
-    reloadBtn.addEventListener('click', () => {
-        browser.runtime.sendMessage({ action: "TRIGGER_RELOAD" }, (response) => {            
-            reloadBtn.textContent = "Updating...";
-            setTimeout(() => { reloadBtn.textContent = "Reload Presence"; }, 1000);
-        });
-        browser.runtime.sendMessage({ 
-            action: "TRIGGER_SYNC", 
-            enabled: state.rpcEnabled
-        });
-    });
-    browser.runtime.sendMessage({ 
-        action: "TRIGGER_SYNC", 
-        enabled: state.rpcEnabled
+    reloadBtn.addEventListener('click', async () => {
+        if (reloadBtn.dataset.busy === '1') return;
+
+        reloadBtn.dataset.busy = '1';
+        reloadBtn.disabled = true;
+        reloadBtn.textContent = 'Resetting...';
+
+        try {
+            const response = await browser.runtime.sendMessage({ action: 'TRIGGER_RELOAD' });
+
+            if (response && response.ok) {
+                reloadBtn.textContent = 'Reset Complete';
+            } else {
+                reloadBtn.textContent = 'Reset Failed';
+            }
+
+            refreshVersionInfo(true).catch(() => { });
+        } catch {
+            reloadBtn.textContent = 'Reset Failed';
+        }
+
+        setTimeout(() => {
+            reloadBtn.dataset.busy = '0';
+            reloadBtn.disabled = false;
+            reloadBtn.textContent = 'Reload Presence';
+        }, 1200);
     });
 });
 
@@ -1764,6 +1871,12 @@ function warmupUpdateBanner() {
     setTimeout(() => refreshUpdateBanner(), 2600);
 }
 
+function warmupVersionInfo() {
+    refreshVersionInfo();
+    setTimeout(() => refreshVersionInfo(), 450);
+    setTimeout(() => refreshVersionInfo(true), 1800);
+}
+
 function currentSectionMapping() {
     mapping = {
         youtube: "rpcYoutube",
@@ -1829,6 +1942,31 @@ async function setStorageData(path, newVal) {
     }
 }
 
+// send data to the info script
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'GET_ALL_COORDS') {
+        const ids = event.data.ids;
+        const responseData = [];
+
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                const rect = el.getBoundingClientRect();
+                responseData.push({
+                    id: id,
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                });
+            }
+        });
+
+        event.source.postMessage({
+            type: 'RECEIVE_ALL_COORDS',
+            data: responseData
+        }, event.origin);
+    }
+});
+
 
 window.onload = async () => {
     try {
@@ -1836,7 +1974,30 @@ window.onload = async () => {
 
         if (stored.rpcEnabled !== undefined) {state.rpcEnabled = stored.rpcEnabled; }
         if (stored.informationPopups !== undefined) {state.popupsEnabled = stored.informationPopups; }
-        
+
+        try {
+            const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+            if (activeTab && activeTab.url) {
+                if (activeTab.url.includes('music.youtube.com')) {
+                    state.expandedSection = 'youtubeMusic';
+                } else if (activeTab.url.includes('youtube.com')) {
+                    state.expandedSection = 'youtube';
+                } else {
+                    const ytTabs = await browser.tabs.query({
+                        url: ["*://*.youtube.com/*", "*://music.youtube.com/*"]
+                    });
+                    const hasMusicTab = ytTabs.some(t => t.url && t.url.includes('music.youtube.com'));
+                    const hasYoutubeTab = ytTabs.some(t => t.url && t.url.includes('youtube.com') && !t.url.includes('music.youtube.com'));
+
+                    if (hasYoutubeTab) {
+                        state.expandedSection = 'youtube';
+                    } else if (hasMusicTab) {
+                        state.expandedSection = 'youtubeMusic';
+                    }
+                }
+            }
+        } catch { }
+
         if (stored.rpcYoutube) {
             state.configs.youtube.showPausedRpc = stored.rpcYoutube.showPausedRpc !== undefined
                 ? stored.rpcYoutube.showPausedRpc
@@ -1923,11 +2084,13 @@ window.onload = async () => {
         render();
 
         warmupUpdateBanner();
+        warmupVersionInfo();
 
     } catch (e) {
         console.error("Initialization Failed:", e);
         render();
 
         warmupUpdateBanner();
+        warmupVersionInfo();
     }
 };

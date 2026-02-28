@@ -1,0 +1,401 @@
+:root {
+    --accent: #5865F2;
+    --bg: #0e0e10;
+    --panel: #1e1f22;
+    --text-main: #ffffff;
+    --text-dim: #b5bac1;
+    --glass: rgba(24, 25, 28, 0.92);
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg);
+    background-image: radial-gradient(circle at 50% 50%, #1a1b1e 0%, #0e0e10 100%);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+}
+
+#usage-note {
+    position: fixed;
+    top: 34px;
+    left: 34px;
+    z-index: 10002;
+    max-width: 760px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(18, 19, 23, 0.9);
+    color: #d7dbff;
+    font-size: 15px;
+    line-height: 1.45;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.42);
+}
+
+#github-links {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 10002;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(16, 17, 21, 0.88);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.38);
+}
+
+.github-link {
+    color: #d7dbff;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.github-link:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.github-divider {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 12px;
+}
+
+#overlay-container {
+    position: fixed;
+    z-index: 1000;
+    width: 360px;
+    background: var(--panel);
+    border-radius: 12px;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#overlay-drag-handle {
+    height: 28px;
+    cursor: grab;
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    user-select: none;
+}
+
+#overlay-drag-handle span {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    opacity: 0.4;
+}
+
+#overlay-drag-handle:active {
+    cursor: grabbing;
+}
+
+#overlay-drag-shield {
+    display: none;
+    position: absolute;
+    top: 28px;
+    left: 0;
+    width: 100%;
+    height: 580px;
+    z-index: 1001;
+}
+
+#popup-frame {
+    width: 100%;
+    height: 580px;
+    border: none;
+    display: block;
+    background: transparent;
+}
+
+#debug-panel,
+#bugs-panel {
+    position: fixed;
+    top: 100px;
+    width: 332px;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(28, 29, 34, 0.96) 0%, rgba(20, 21, 25, 0.96) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 24px 55px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    overflow: hidden;
+}
+
+#debug-panel {
+    left: 44px;
+}
+
+#bugs-panel {
+    right: 44px;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: grab;
+    user-select: none;
+}
+
+.panel-header:active {
+    cursor: grabbing;
+}
+
+.panel-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.panel-title-wrap {
+    display: flex;
+    align-items: baseline;
+    min-width: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.copy-settings-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9.5px;
+    color: #b5bac1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    user-select: none;
+}
+
+#copy-include-settings {
+    margin: 0;
+    width: 12px;
+    height: 12px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+#copy-debug {
+    border: 1px solid rgba(88, 101, 242, 0.45);
+    background: rgba(88, 101, 242, 0.18);
+    color: #e8ebff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+#copy-debug:hover {
+    background: rgba(88, 101, 242, 0.26);
+}
+
+#copy-debug:active {
+    transform: translateY(1px);
+}
+
+#debug-content,
+#bugs-content {
+    padding: 10px 12px 12px;
+    overflow: auto;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text-dim);
+}
+
+#debug-content::-webkit-scrollbar,
+#bugs-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+#debug-content::-webkit-scrollbar-track,
+#bugs-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#debug-content::-webkit-scrollbar-thumb,
+#bugs-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+}
+
+.debug-block {
+    margin-bottom: 10px;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.debug-block:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.debug-label {
+    color: #cfd4db;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.debug-value {
+    color: #f3f4f6;
+    word-break: break-word;
+}
+
+.tabs-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tab-item {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.tab-item.is-selected {
+    border-color: rgba(88, 101, 242, 0.55);
+    background: rgba(88, 101, 242, 0.15);
+}
+
+.tab-title {
+    color: #f3f4f6;
+    font-weight: 600;
+    margin-bottom: 0;
+    line-height: 1.35;
+}
+
+.tab-main {
+    color: #b8c2ff;
+    font-weight: 700;
+}
+
+.tab-url {
+    color: #8ea2ff;
+    text-decoration: none;
+    word-break: break-all;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 10.5px;
+    margin-top: 2px;
+    display: block;
+}
+
+.tab-url:hover {
+    text-decoration: underline;
+}
+
+.selected-chip {
+    display: inline-block;
+    margin: 0 6px 6px 0;
+    padding: 4px 7px;
+    border-radius: 999px;
+    border: 1px solid rgba(88, 101, 242, 0.5);
+    background: rgba(88, 101, 242, 0.15);
+    color: #e8ebff;
+    font-size: 10px;
+}
+
+.bug-item {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 9px;
+    background: rgba(255, 255, 255, 0.02);
+    margin-bottom: 8px;
+}
+
+.bug-item:last-child {
+    margin-bottom: 0;
+}
+
+.bug-title {
+    color: #d8deff;
+    font-weight: 700;
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+
+.bug-desc {
+    color: #c7ccd3;
+    font-size: 10.5px;
+    line-height: 1.42;
+}
+
+.bug-empty {
+    color: #c7ccd3;
+    font-size: 11px;
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.info-label {
+    position: fixed;
+    z-index: 9999;
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    width: 220px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.info-label b {
+    display: inline;
+    margin: 0;
+    color: #d6dcff;
+    font-weight: 700;
+    text-transform: none;
+    font-size: inherit;
+    letter-spacing: normal;
+}
+
+.info-label b:first-child {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-weight: 800;
+}

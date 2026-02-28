@@ -3,6 +3,8 @@ let nativePort = null;
 let defaultSettings = null;
 
 const UPDATE_VERSION_URL = "https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/App/version.txt";
+const EXTENSION_VERSION_URL = "https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/Extension/manifest.json";
+const AMO_EXTENSION_PAGE_URL = "https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/";
 const UPDATE_GITHUB_URL = "https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence";
 const UPDATE_DOWNLOAD_URL = "https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/releases/latest";
 
@@ -27,6 +29,43 @@ let nativeRecoveryTimer = null;
 let nativeRecoveryAttempts = 0;
 
 let pendingNativeStatusRequests = []; // { resolve, reject, timer }
+
+let rpcResetInFlight = null;
+let suppressMissingModalUntil = 0;
+
+const VERSION_CACHE_TTL_MS = 60 * 1000;
+let latestVersionCache = {
+    fetchedAt: 0,
+    data: null
+};
+
+function shouldSuppressMissingModal() {
+    return Date.now() < suppressMissingModalUntil;
+}
+
+function suppressMissingModalFor(ms) {
+    suppressMissingModalUntil = Date.now() + Math.max(0, Number(ms) || 0);
+}
+
+function rejectAndClearPendingNative(reasonMessage) {
+    const reason = new Error(reasonMessage || 'Native reset in progress');
+
+    try {
+        pendingNativeStatusRequests.forEach((pending) => {
+            if (pending && pending.timer) clearTimeout(pending.timer);
+            if (pending && pending.reject) pending.reject(reason);
+        });
+    } catch { }
+    pendingNativeStatusRequests = [];
+
+    try {
+        pendingNativeRequests.forEach((pending) => {
+            if (pending && pending.timer) clearTimeout(pending.timer);
+            if (pending && pending.reject) pending.reject(reason);
+        });
+    } catch { }
+    pendingNativeRequests.clear();
+}
 
 function requestNativeStatus(timeoutMs = 900) {
     return new Promise((resolve, reject) => {
@@ -196,9 +235,13 @@ async function ensureNativeInvalidModal() {
     scheduleNativeRecoveryCheck();
 }
 
-async function loadDefaults() {
-    if (!defaultSettings) {
-        const response = await fetch(browser.runtime.getURL('default_settings.json'));
+async function loadDefaults(forceReload = false) {
+    if (!defaultSettings || forceReload) {
+        const baseUrl = browser.runtime.getURL('default_settings.json');
+        const response = await fetch(`${baseUrl}?_=${Date.now()}`, {
+            method: 'GET',
+            cache: 'no-store'
+        });
         defaultSettings = await response.json();
     }
     return defaultSettings;
@@ -211,7 +254,9 @@ function getNativePort() {
         } catch {
             nativePort = null;
             nativeHostReachable = false;
-            ensureNativeMissingModal();
+            if (!shouldSuppressMissingModal()) {
+                ensureNativeMissingModal();
+            }
             return null;
         }
 
@@ -263,13 +308,247 @@ function getNativePort() {
                 pendingNativeRequests.clear();
             } catch { }
 
-            ensureNativeMissingModal();
+            if (!shouldSuppressMissingModal()) {
+                ensureNativeMissingModal();
+            }
         });
     }
     return nativePort;
 }
 
+async function getInstalledVersionsSnapshot() {
+    const extensionVersion = browser.runtime.getManifest().version || '';
+    let nativeAppVersion = '';
+
+    try {
+        const nativeResp = await requestNative('GET_VERSION', {}, 1200);
+        nativeAppVersion = extractVersion(nativeResp && nativeResp.version ? nativeResp.version : '');
+    } catch {
+        nativeAppVersion = '';
+    }
+
+    return {
+        extensionVersion,
+        nativeAppVersion
+    };
+}
+
+async function fetchLatestVersions(forceRefresh = false) {
+    const now = Date.now();
+    if (!forceRefresh && latestVersionCache.data && (now - latestVersionCache.fetchedAt) < VERSION_CACHE_TTL_MS) {
+        return latestVersionCache.data;
+    }
+
+    const [nativeRemote, extensionRemoteGithub] = await Promise.all([
+        (async () => {
+            try {
+                const response = await fetch(`${UPDATE_VERSION_URL}?_=${Date.now()}`, { method: 'GET', cache: 'no-store' });
+                if (!response.ok) return '';
+                const txt = await response.text();
+                return extractVersion(txt);
+            } catch {
+                return '';
+            }
+        })(),
+        (async () => {
+            try {
+                const response = await fetch(`${EXTENSION_VERSION_URL}?_=${Date.now()}`, { method: 'GET', cache: 'no-store' });
+                if (!response.ok) return '';
+                const manifest = await response.json();
+                return manifest && manifest.version ? String(manifest.version).trim() : '';
+            } catch {
+                return '';
+            }
+        })()
+    ]);
+
+    let extensionRemote = extensionRemoteGithub || '';
+
+    if (!extensionRemote) {
+        try {
+            const response = await fetch(`${AMO_EXTENSION_PAGE_URL}?_=${Date.now()}`, { method: 'GET', cache: 'no-store' });
+            if (response.ok) {
+                const html = await response.text();
+                const versionMatch = html.match(/<dt[^>]*class=["'][^"']*Definition-dt[^"']*["'][^>]*>\s*Version\s*<\/dt>\s*<dd[^>]*class=["'][^"']*AddonMoreInfo-version[^"']*["'][^>]*>\s*([^<\s]+)\s*<\/dd>/i);
+                if (versionMatch && versionMatch[1]) {
+                    extensionRemote = String(versionMatch[1]).trim();
+                }
+            }
+        } catch {
+            extensionRemote = '';
+        }
+    }
+
+    const payload = {
+        extensionVersion: extensionRemote || '',
+        nativeAppVersion: nativeRemote || ''
+    };
+
+    latestVersionCache = {
+        fetchedAt: now,
+        data: payload
+    };
+
+    return payload;
+}
+
+async function getVersionInfo({ includeLatest = true, forceLatestRefresh = false } = {}) {
+    const installed = await getInstalledVersionsSnapshot();
+    let latest = {
+        extensionVersion: '',
+        nativeAppVersion: ''
+    };
+
+    if (includeLatest) {
+        latest = await fetchLatestVersions(forceLatestRefresh);
+    }
+
+    return {
+        installed,
+        latest,
+        updateStatus: updateAvailableStatus
+    };
+}
+
+async function restoreSelectedTabsAfterReset(selectedTabs) {
+    if (!selectedTabs || typeof selectedTabs !== 'object') return;
+
+    for (const [service, tabId] of Object.entries(selectedTabs)) {
+        if (service === 'Custom') continue;
+        if (tabId == null) continue;
+
+        let tab;
+        try {
+            tab = await browser.tabs.get(Number(tabId));
+        } catch {
+            continue;
+        }
+
+        const expectedService = getServiceFromUrl(tab && tab.url);
+        if (!expectedService || String(expectedService).toLowerCase() !== String(service).toLowerCase()) {
+            continue;
+        }
+
+        try {
+            await requestNative('SELECT_TAB', { service, tabId: Number(tabId) }, 900);
+        } catch { }
+
+        await sendRequestSyncWithRetries(Number(tabId), tab.url, 18, { showPopup: false });
+    }
+}
+
+async function performFullRpcReset() {
+    if (rpcResetInFlight) {
+        return rpcResetInFlight;
+    }
+
+    rpcResetInFlight = (async () => {
+        const defaults = await loadDefaults(true);
+        const settings = await browser.storage.local.get(defaults);
+
+        let selectedBeforeReset = {};
+        try {
+            const status = await requestNativeStatus(900);
+            selectedBeforeReset = (status && status.selected_tabs) ? status.selected_tabs : {};
+        } catch {
+            selectedBeforeReset = {};
+        }
+
+        const existingPort = nativePort;
+        if (existingPort) {
+            try {
+                existingPort.postMessage({ action: 'CLEAR_RPC' });
+            } catch { }
+        }
+
+        rejectAndClearPendingNative('Native reset in progress');
+
+        suppressMissingModalFor(3000);
+
+        if (existingPort) {
+            try {
+                existingPort.disconnect();
+            } catch { }
+        }
+
+        nativePort = null;
+        nativeHostReachable = null;
+        lastNativeProbeAt = 0;
+        lastNativeProbeStatus = null;
+        nativeProbeInFlight = null;
+
+        const freshPort = getNativePort();
+        if (!freshPort) {
+            throw new Error('Native host missing');
+        }
+
+        try {
+            await requestNative('GET_VERSION', {}, 1500);
+        } catch { }
+
+        freshPort.postMessage({
+            action: 'REFRESH',
+            settings
+        });
+
+        if (settings.rpcEnabled) {
+            await syncActiveTabs();
+            await restoreSelectedTabsAfterReset(selectedBeforeReset);
+
+            if (settings.rpcCustom && settings.rpcCustom.enabled) {
+                freshPort.postMessage({
+                    action: 'UPDATE_CUSTOM',
+                    currentSite: 'Custom',
+                    payload: {},
+                    settings: settings.rpcCustom
+                });
+            }
+        } else {
+            try {
+                freshPort.postMessage({ action: 'CLEAR_RPC' });
+            } catch { }
+        }
+
+        return { ok: true };
+    })().catch((error) => {
+        return {
+            ok: false,
+            error: (error && error.message) ? error.message : 'Unknown reset error'
+        };
+    }).finally(() => {
+        rpcResetInFlight = null;
+    });
+
+    return rpcResetInFlight;
+}
+
+async function getRpcDiagnostics() {
+    const versionInfo = await getVersionInfo({ includeLatest: true });
+
+    let nativeStatus = null;
+    try {
+        nativeStatus = await requestNativeStatus(1200);
+    } catch {
+        nativeStatus = null;
+    }
+
+    return {
+        collectedAt: new Date().toISOString(),
+        installedVersions: versionInfo.installed,
+        latestVersions: versionInfo.latest,
+        selectedStreams: (nativeStatus && nativeStatus.selected_tabs) || {},
+        rpcState: {
+            activeServices: (nativeStatus && nativeStatus.active_services) || [],
+            selectedTabs: (nativeStatus && nativeStatus.selected_tabs) || {},
+            rpcDataByTab: (nativeStatus && nativeStatus.rpc_data) || {},
+            nativeReachable: nativeHostReachable,
+            resetInProgress: !!rpcResetInFlight
+        }
+    };
+}
+
 function requestNative(action, extra = {}, timeoutMs = 2000) {
+    console.log("Requesting native action:", { action, extra });
     return new Promise((resolve, reject) => {
         try {
             const port = getNativePort();
@@ -399,7 +678,18 @@ function isDisplayableUrl(url) {
     }
 }
 
-async function sendRequestSyncWithRetries(tabId, expectedUrl, maxAttempts = 18) {
+function isProjectGitHubPage(url) {
+    if (!url) return false;
+    try {
+        const u = new URL(url);
+        return u.hostname === 'github.com' &&
+            u.pathname.toLowerCase().startsWith('/enhanced-discord-rich-presence/');
+    } catch {
+        return false;
+    }
+}
+
+async function sendRequestSyncWithRetries(tabId, expectedUrl, maxAttempts = 18, extraFields = {}) {
     if (!tabId) return false;
 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
@@ -414,7 +704,7 @@ async function sendRequestSyncWithRetries(tabId, expectedUrl, maxAttempts = 18) 
         }
 
         try {
-            await browser.tabs.sendMessage(tabId, { action: 'REQUEST_SYNC' });
+            await browser.tabs.sendMessage(tabId, { action: 'REQUEST_SYNC', ...extraFields });
             return true;
         } catch { }
 
@@ -431,6 +721,9 @@ async function tryShowPendingUpdateModal(tabId, url) {
     const isNativeBlocking = pendingUpdateModal.kind === 'native_missing' || pendingUpdateModal.kind === 'native_invalid';
     if (!isNativeBlocking && updateModalTargetTabId && tabId !== updateModalTargetTabId) return;
     if (!isDisplayableUrl(url)) return;
+
+    // Don't show "Native App Not Installed" on the project's GitHub page
+    if (isNativeBlocking && isProjectGitHubPage(url)) return;
 
     if (isNativeBlocking) {
         const status = await probeNativeHost();
@@ -640,17 +933,24 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
                 } catch { }
             }
 
-            const delivered = await sendRequestSyncWithRetries(tab.id, tab.url);
+            const delivered = await sendRequestSyncWithRetries(tab.id, tab.url, 18, { showPopup: true });
 
             return { ok: true, service, tabId: tab.id, delivered };
         } catch {
             // Even if status fails, try to sync active tab
-            const delivered = await sendRequestSyncWithRetries(tab.id, tab.url);
+            const delivered = await sendRequestSyncWithRetries(tab.id, tab.url, 18, { showPopup: true });
             return { ok: false, reason: 'status_failed', service, tabId: tab.id, delivered };
         }
     }
     if (msg.action === "GET_UPDATE_STATUS") {
         return updateAvailableStatus;
+    }
+    if (msg.action === 'GET_VERSION_INFO') {
+        const includeLatest = msg.includeLatest !== false;
+        return await getVersionInfo({ includeLatest, forceLatestRefresh: !!msg.forceRefresh });
+    }
+    if (msg.action === 'GET_RPC_DIAGNOSTICS') {
+        return await getRpcDiagnostics();
     }
     if (msg.action === "UPDATE_MODAL_DISMISSED") {
         if (msg.kind === 'native_missing' || msg.kind === 'native_invalid') {
@@ -672,16 +972,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         return;
     }
     if (msg.action === "TRIGGER_RELOAD") {
-        const port = getNativePort();
-        if (!port) return;
-        const defaults = await loadDefaults();
-        const settings = await browser.storage.local.get(defaults);
-
-        port.postMessage({ 
-            action: "REFRESH",
-            settings: settings
-        });
-        return;
+        return await performFullRpcReset();
     }
     if (msg.action === "TRIGGER_CUSTOM_RPC") {
         const defaults = await loadDefaults();
@@ -945,6 +1236,12 @@ browser.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install") {
         // console.log("First time install: Setting defaults.");
         await initializeStorage();
+        try {
+            await browser.tabs.create({
+                url: browser.runtime.getURL('pages/info.html'),
+                active: true
+            });
+        } catch { }
     } else if (details.reason === "update") {
         // console.log("Extension updated: Checking for new setting keys.");
         await initializeStorage();

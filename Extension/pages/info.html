@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced RPC Tutorial / Diagnostics</title>
+    <link rel="stylesheet" href="info.css">
+</head>
+<body>
+
+<div id="usage-note">This is a short explanation of the usage of this extension. To get to this page again, click the "i" at the very bottom of the extension popup.</div>
+
+<div id="github-links">
+    <a class="github-link" href="https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+    <span class="github-divider">•</span>
+    <a class="github-link" href="https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/issues" target="_blank" rel="noopener noreferrer">Found an issue? Open a GitHub Issue</a>
+</div>
+
+<div id="overlay-container">
+    <div id="overlay-drag-handle"><span>::: Tutorial :::</span></div>
+    <div id="overlay-drag-shield"></div>
+    <iframe id="popup-frame" src="../popup.html"></iframe>
+</div>
+
+<aside id="debug-panel">
+    <div id="debug-header" class="panel-header">
+        <div class="panel-title-wrap">
+            <div class="panel-title">Debug Information</div>
+        </div>
+        <div class="header-actions">
+            <label class="copy-settings-wrap" for="copy-include-settings">
+                <input id="copy-include-settings" type="checkbox" autocomplete="off">
+                Settings
+            </label>
+            <button id="copy-debug" type="button">Copy</button>
+        </div>
+    </div>
+    <div id="debug-content">Loading diagnostics...</div>
+</aside>
+
+<aside id="bugs-panel">
+    <div id="bugs-header" class="panel-header">
+        <div class="panel-title-wrap">
+            <div class="panel-title">Known Bugs</div>
+        </div>
+    </div>
+    <div id="bugs-content">No known bugs...</div>
+</aside>
+
+<script src="info.js"></script>
+</body>
+</html>

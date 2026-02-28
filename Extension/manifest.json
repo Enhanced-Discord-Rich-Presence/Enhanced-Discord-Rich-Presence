@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Enhanced Discord Rich Presence",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "icons": {
     "48": "src/icons/icon.png",
     "96": "src/icons/icon.png"
@@ -20,7 +20,8 @@
     "*://*.youtube.com/*",
     "*://music.youtube.com/*",
     "*://github.com/*",
-    "*://raw.githubusercontent.com/*"
+    "*://raw.githubusercontent.com/*",
+    "*://addons.mozilla.org/*"
   ],
   "background": {
     "scripts": ["background.js"]
@@ -38,12 +39,12 @@
   "content_scripts": [
     {
       "matches": ["*://music.youtube.com/*"],
-      "js": ["Activities/YoutubeMusic.js"],
+      "js": ["Activities/YoutubeMusic/data.js", "Activities/YoutubeMusic/handler.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["*://*.youtube.com/*"],
-      "js": ["Activities/Youtube.js"],
+      "js": ["Activities/Youtube/data.js", "Activities/Youtube/handler.js"],
       "run_at": "document_idle"
     },
     {
