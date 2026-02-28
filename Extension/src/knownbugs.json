@@ -3,7 +3,7 @@
   "bugs": [
     {
       "title": "Youtube: Multiple Channels",
-      "description": "If the playing Youtube Video has multiple channels, it will says \"Unknown Author\"."
+      "description": "If the playing Youtube Video has multiple channels, it will say \"Unknown Author\"."
     },
     {
       "title": "Youtube Music Popup",
