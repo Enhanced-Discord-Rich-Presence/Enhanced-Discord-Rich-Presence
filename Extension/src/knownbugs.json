@@ -8,6 +8,10 @@
     {
       "title": "Youtube Music Popup",
       "description": "Sometimes if Youtube Music streams the Browsing Activities and you leave and re-enter the page, it will show a popup. Don't worry it doesn't reset the time or so, it only shows you the TOAST again."
+    },
+    {
+      "title": "Youtube Music: Time Reset",
+      "description": "If you seek in a song, minimize or maximize the window, it sets the time to 0 again. It resets when you pause and unpause or when the song changes."
     }
   ]
 }
