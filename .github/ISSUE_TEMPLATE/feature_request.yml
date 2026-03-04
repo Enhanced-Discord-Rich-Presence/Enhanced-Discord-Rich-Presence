@@ -1,7 +1,7 @@
 name: Enhancement / Feature Request
 description: Suggest an enhancement or new feature for the project.
 title: "[FEATURE]: <Short description of the feature>"
-labels: ["enhancement", "status: in-review"]
+labels: ["status: in-review", "type: enhancement"]
 assignees: ["Aqusorias"]
 body:
   - type: markdown

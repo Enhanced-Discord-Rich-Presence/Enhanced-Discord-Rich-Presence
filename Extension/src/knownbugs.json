@@ -16,6 +16,10 @@
     {
       "title": "Browsing Activities Popup",
       "description": "Even if you disabled the RPC, it will still show the popup when it WOULD stream Brwosing Activities. It doesn't actually stream anything, but still shows it."
+    },
+    {
+      "title": "Incorrect Native App Version shown",
+      "description": "For some reason, the Extension currently shows the Native App Version as 1.1.10 even though it is Version 1.1.0. This is just a display issue, you do have the Version 1.1.0."
     }
   ]
 }

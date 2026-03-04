@@ -1,7 +1,7 @@
 name: Bug report
 description: Report a bug or unexpected behavior.
 title: "[BUG]: <Short description of the bug>"
-labels: ["bug", "status: in-review"]
+labels: ["status: in-review", "type: bug"]
 assignees: ["Aqusorias"]
 body:
   - type: markdown

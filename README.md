@@ -1,5 +1,5 @@
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](App/version.txt) [![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](#) [![Firefox](https://img.shields.io/badge/Firefox-WebExtension-orange.svg)](#)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![Version](https://img.shields.io/badge/version-1.1.0-orange.svg)](App/version.txt) [![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](#) [![Firefox](https://img.shields.io/badge/Firefox-WebExtension-orange.svg)](#)
 
 <table align="center">
   <tr>
