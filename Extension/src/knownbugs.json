@@ -20,6 +20,10 @@
     {
       "title": "Incorrect Native App Version shown",
       "description": "For some reason, the Extension currently shows the Native App Version as 1.1.10 even though it is Version 1.1.0. This is just a display issue, you do have the Version 1.1.0."
+    },
+    {
+      "title": "Youtube Livestreams",
+      "description": "The timer behaves weirdly if you have \"Show current time of the video\" and/or \"Show length of the video\" enabled. Shortly:\nBoth Disabled: Tracks session duration\nBoth Enabled: Shows runtime out of +1 hour\nOnly \"Show current time of the video\" Enabled: Shows stream runtime (breaks on long-duration streams like LofiGirl)\nOnly \"Show length of the video\" Enabled: Counts down from 1 hour"
     }
   ]
 }
