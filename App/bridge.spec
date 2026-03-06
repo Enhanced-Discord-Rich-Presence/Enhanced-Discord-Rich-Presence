@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='bridge',
+    name='EnhancedRPC',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

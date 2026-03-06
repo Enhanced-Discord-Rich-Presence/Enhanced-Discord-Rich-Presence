@@ -308,14 +308,14 @@ class MultiServiceBridge:
 def get_app_version() -> str:
     candidates = []
     try:
-        base_meipass = getattr(sys, '_MEIPASS', None)
-        if base_meipass:
-            candidates.append(os.path.join(base_meipass, 'version.txt'))
+        candidates.append(os.path.join(os.path.dirname(sys.executable), 'version.txt'))
     except Exception:
         pass
 
     try:
-        candidates.append(os.path.join(os.path.dirname(sys.executable), 'version.txt'))
+        base_meipass = getattr(sys, '_MEIPASS', None)
+        if base_meipass:
+            candidates.append(os.path.join(base_meipass, 'version.txt'))
     except Exception:
         pass
 

@@ -322,8 +322,11 @@ async function getInstalledVersionsSnapshot() {
 
     try {
         const nativeResp = await requestNative('GET_VERSION', {}, 1200);
+        console.log('[Version Debug] Native response:', nativeResp);
         nativeAppVersion = extractVersion(nativeResp && nativeResp.version ? nativeResp.version : '');
-    } catch {
+        console.log('[Version Debug] Extracted native version:', nativeAppVersion);
+    } catch (err) {
+        console.log('[Version Debug] Failed to get native version:', err);
         nativeAppVersion = '';
     }
 
@@ -898,6 +901,42 @@ async function syncActiveTabs() {
 }
 
 browser.runtime.onMessage.addListener(async (msg, sender) => {
+    if (msg.action === 'ENSURE_YTMUSIC_PLAYING_TAB_SELECTED') {
+        const senderTab = sender && sender.tab;
+        if (!senderTab || senderTab.id == null) return { ok: false, reason: 'no_sender_tab' };
+
+        const tabUrl = String(senderTab.url || '');
+        if (!tabUrl.includes('music.youtube.com')) return { ok: false, reason: 'not_music_tab' };
+        if (msg.isPlaying !== true) return { ok: false, reason: 'not_playing' };
+
+        const port = getNativePort();
+        if (!port) return { ok: false, reason: 'native_missing' };
+
+        const service = 'YoutubeMusic';
+        let selectedNow = null;
+        try {
+            const status = await requestNativeStatus(850);
+            selectedNow = normalizeSelectedTabId(status && status.selected_tabs, service);
+        } catch {
+            selectedNow = null;
+        }
+
+        if (selectedNow !== null && String(selectedNow) === String(senderTab.id)) {
+            return { ok: true, alreadySelected: true };
+        }
+
+        try {
+            await requestNative('SELECT_TAB', { service, tabId: senderTab.id }, 950);
+        } catch {
+            if (selectedNow !== null) {
+                port.postMessage({ action: 'TAB_CLOSED', tabId: selectedNow });
+            }
+        }
+
+        const delivered = await sendRequestSyncWithRetries(senderTab.id, senderTab.url, 12, { showPopup: false });
+        return { ok: true, switched: true, delivered };
+    }
+
     if (msg.action === 'SELECT_ACTIVE_TAB_FOR_RPC') {
         const port = getNativePort();
         if (!port) return { ok: false, reason: 'native_missing' };
@@ -1029,6 +1068,10 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         // Suppress info popups when the native app isn't installed/reachable
         if (nativeHostReachable === false) return;
 
+        const defaults = await loadDefaults();
+        const settings = await browser.storage.local.get(defaults);
+        if (!settings.rpcEnabled) return;
+
         const senderTab = sender && sender.tab;
         if (!senderTab || senderTab.id == null) return;
         if (senderTab.active !== true) return;
@@ -1091,7 +1134,12 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     const isMusic = currentUrl.includes("music.youtube.com");
     const isMainYoutube = currentUrl.includes("www.youtube.com");
 
-    if (isMusic && !(settings.rpcYoutubeMusic?.running?.enabled ?? settings.rpcYoutubeMusic?.enabled)) return;
+    const youtubeMusicEnabled = settings.rpcYoutubeMusic?.running?.enabled
+        ?? settings.rpcYoutubeMusic?.paused?.enabled
+        ?? settings.rpcYoutubeMusic?.enabled
+        ?? true;
+
+    if (isMusic && !youtubeMusicEnabled) return;
     if (isMainYoutube && !settings.rpcYoutube.running.enabled) return;
 
     const currentSite = isMusic ? "YoutubeMusic" : "Youtube";
@@ -1150,13 +1198,27 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         const isYouTube = url.includes("youtube.com") || url.includes("music.youtube.com");
 
         if (!isYouTube) {
-            const port = getNativePort();
-            if (port) {
-                port.postMessage({ 
-                    action: "TAB_CLOSED", 
-                    tabId: tabId 
+            (async () => {
+                const port = getNativePort();
+                if (!port) return;
+
+                let selected = {};
+                try {
+                    const status = await requestNativeStatus(700);
+                    selected = (status && status.selected_tabs) || {};
+                } catch { }
+
+                Object.entries(selected).forEach(([service, selectedTabId]) => {
+                    if (String(selectedTabId) === String(tabId)) {
+                        port.postMessage({ action: "CLEAR_SERVICE", service });
+                    }
                 });
-            }
+
+                port.postMessage({
+                    action: "TAB_CLOSED",
+                    tabId: tabId
+                });
+            })();
         }
     }
 });
@@ -1169,8 +1231,24 @@ browser.tabs.onRemoved.addListener((tabId) => {
     if (st && st.timer) clearTimeout(st.timer);
     updateModalRetryByTab.delete(tabId);
 
-    const port = getNativePort();
-    if (port) port.postMessage({ action: "TAB_CLOSED", tabId: tabId });
+    (async () => {
+        const port = getNativePort();
+        if (!port) return;
+
+        let selected = {};
+        try {
+            const status = await requestNativeStatus(700);
+            selected = (status && status.selected_tabs) || {};
+        } catch { }
+
+        Object.entries(selected).forEach(([service, selectedTabId]) => {
+            if (String(selectedTabId) === String(tabId)) {
+                port.postMessage({ action: "CLEAR_SERVICE", service });
+            }
+        });
+
+        port.postMessage({ action: "TAB_CLOSED", tabId: tabId });
+    })();
 });
 
 browser.tabs.onActivated.addListener(async (activeInfo) => {
@@ -1203,12 +1281,80 @@ function deepMerge(target, source) {
     return output;
 }
 
+function normalizeRpcYoutubeMusicConfig(config, defaultsConfig = {}) {
+    const fallbackRoot = isObject(defaultsConfig) ? defaultsConfig : {};
+    const fallbackRunning = isObject(fallbackRoot.running) ? fallbackRoot.running : {};
+    const fallbackPaused = isObject(fallbackRoot.paused) ? fallbackRoot.paused : {};
+
+    const source = isObject(config) ? { ...config } : {};
+    const hasRunning = isObject(source.running);
+    const hasPaused = isObject(source.paused);
+    const hasModes = hasRunning || hasPaused;
+
+    const legacyEnabled = source.enabled;
+    const fallbackEnabled = fallbackRunning.enabled ?? true;
+    const resolvedEnabled = (legacyEnabled !== undefined) ? !!legacyEnabled : !!fallbackEnabled;
+
+    let running;
+    let paused;
+
+    if (!hasModes) {
+        running = deepMerge(fallbackRunning, source);
+        paused = deepMerge(fallbackPaused, source);
+        running.enabled = resolvedEnabled;
+        paused.enabled = resolvedEnabled;
+
+        const pausedDetails = String(paused.details || '').toUpperCase();
+        if (!pausedDetails.includes('PAUSED:')) {
+            paused.details = `PAUSED: ${running.details || '%title%'}`;
+        }
+
+        paused.timestamps = {
+            ...(isObject(paused.timestamps) ? paused.timestamps : {}),
+            start: false,
+            end: false
+        };
+    } else {
+        running = deepMerge(fallbackRunning, source.running || {});
+        paused = deepMerge(fallbackPaused, source.paused || {});
+
+        if (running.enabled === undefined) running.enabled = resolvedEnabled;
+        if (paused.enabled === undefined) paused.enabled = resolvedEnabled;
+    }
+
+    const browsingActivities = source.browsingActivities
+        || source.running?.browsingActivities
+        || source.paused?.browsingActivities
+        || fallbackRoot.browsingActivities;
+
+    const normalized = {
+        ...source,
+        showPausedRpc: source.showPausedRpc !== undefined
+            ? source.showPausedRpc
+            : (fallbackRoot.showPausedRpc !== undefined ? fallbackRoot.showPausedRpc : true),
+        showSongWhileBrowsing: source.showSongWhileBrowsing !== undefined
+            ? source.showSongWhileBrowsing
+            : (fallbackRoot.showSongWhileBrowsing !== undefined ? fallbackRoot.showSongWhileBrowsing : true),
+        browsingActivities,
+        running,
+        paused
+    };
+
+    delete normalized.enabled;
+
+    return normalized;
+}
+
 async function initializeStorage() {
     const response = await fetch(browser.runtime.getURL('default_settings.json'));
     const defaults = await response.json();
     const current = await browser.storage.local.get();
 
     const merged = deepMerge(defaults, current);
+
+    if (merged.rpcYoutubeMusic) {
+        merged.rpcYoutubeMusic = normalizeRpcYoutubeMusicConfig(merged.rpcYoutubeMusic, defaults.rpcYoutubeMusic || {});
+    }
     
     if (current.rpcEnabled !== undefined) merged.rpcEnabled = current.rpcEnabled;
     if (current.informationPopups !== undefined) merged.informationPopups = current.informationPopups;

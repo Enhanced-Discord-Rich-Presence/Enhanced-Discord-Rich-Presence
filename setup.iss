@@ -8,7 +8,7 @@ AppId={{3879D6CE-2CFB-457E-B3F6-592678F9A251}}
 AppVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Enhanced Discord RPC
 DefaultGroupName=Enhanced Discord RPC
-UninstallDisplayIcon={app}\bridge.exe
+UninstallDisplayIcon={app}\EnhancedRPC.exe
 SetupIconFile=Extension\src\icons\icon.ico
 AppMutex=EnhancedDiscordRPC_Mutex
 Compression=lzma2
@@ -23,11 +23,15 @@ PrivilegesRequired=lowest
 CloseApplications=yes
 
 [Files]
-Source: "App\dist\bridge.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "App\app_manifest.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateManifestPath
 
 [Registry]
 Root: HKCU; Subkey: "Software\Mozilla\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.json"; Flags: uninsdeletekey
+
+[InstallDelete]
+Type: files; Name: "{app}\bridge.exe"
 
 [Code]
 procedure UpdateManifestPath();
@@ -38,7 +42,7 @@ var
   FileDataUnicode: String; 
 begin
   ManifestPath := ExpandConstant('{localappdata}\Enhanced Discord RPC\app_manifest.json');
-  ExePath := ExpandConstant('{localappdata}\Enhanced Discord RPC\bridge.exe');
+  ExePath := ExpandConstant('{localappdata}\Enhanced Discord RPC\EnhancedRPC.exe');
   
   StringChangeEx(ExePath, '\', '\\', True);
 

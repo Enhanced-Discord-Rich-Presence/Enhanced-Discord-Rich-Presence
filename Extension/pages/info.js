@@ -277,10 +277,20 @@ async function fetchKnownBugs() {
 
 async function getDiagnosticsSnapshot() {
     let diagnostics = null;
+    let versionInfo = null;
     try {
         diagnostics = await browser.runtime.sendMessage({ action: 'GET_RPC_DIAGNOSTICS' });
     } catch {
         diagnostics = null;
+    }
+
+    try {
+        versionInfo = await browser.runtime.sendMessage({
+            action: 'GET_VERSION_INFO',
+            includeLatest: true
+        });
+    } catch {
+        versionInfo = null;
     }
 
     let tabs = [];
@@ -290,6 +300,36 @@ async function getDiagnosticsSnapshot() {
         tabs = [];
     }
 
+    // Get browser and OS info
+    let browserInfo = '';
+    let osInfo = '';
+    
+    try {
+        const browserData = await browser.runtime.getBrowserInfo();
+        browserInfo = `${browserData.name} ${browserData.version}`;
+    } catch {
+        browserInfo = 'Unknown';
+    }
+    
+    try {
+        const platformData = await browser.runtime.getPlatformInfo();
+        const osMap = {
+            'win': 'Windows',
+            'mac': 'macOS',
+            'android': 'Android',
+            'cros': 'Chrome OS',
+            'linux': 'Linux',
+            'openbsd': 'OpenBSD',
+            'fuchsia': 'Fuchsia'
+        };
+        osInfo = osMap[platformData.os] || platformData.os;
+        if (platformData.arch) {
+            osInfo += ` (${platformData.arch})`;
+        }
+    } catch {
+        osInfo = 'Unknown';
+    }
+
     const selectedByService = (diagnostics && diagnostics.rpcState && diagnostics.rpcState.selectedTabs) || {};
     const selectedEntries = Object.entries(selectedByService)
         .map(([service, tabId]) => ({ service, tabId: Number(tabId) }))
@@ -297,10 +337,27 @@ async function getDiagnosticsSnapshot() {
 
     const selectedTabIdSet = new Set(selectedEntries.map((entry) => entry.tabId));
 
+    const diagnosticsInstalled = (diagnostics && diagnostics.installedVersions) || {};
+    const diagnosticsLatest = (diagnostics && diagnostics.latestVersions) || {};
+    const fallbackInstalled = (versionInfo && versionInfo.installed) || {};
+    const fallbackLatest = (versionInfo && versionInfo.latest) || {};
+
+    const installedVersions = {
+        extensionVersion: diagnosticsInstalled.extensionVersion || fallbackInstalled.extensionVersion || '',
+        nativeAppVersion: diagnosticsInstalled.nativeAppVersion || fallbackInstalled.nativeAppVersion || ''
+    };
+
+    const latestVersions = {
+        extensionVersion: diagnosticsLatest.extensionVersion || fallbackLatest.extensionVersion || '',
+        nativeAppVersion: diagnosticsLatest.nativeAppVersion || fallbackLatest.nativeAppVersion || ''
+    };
+
     return {
         collectedAt: (diagnostics && diagnostics.collectedAt) || new Date().toISOString(),
-        installedVersions: (diagnostics && diagnostics.installedVersions) || {},
-        latestVersions: (diagnostics && diagnostics.latestVersions) || {},
+        browserInfo,
+        osInfo,
+        installedVersions,
+        latestVersions,
         selectedEntries,
         tabs: tabs.map((tab) => ({
             id: tab.id,
@@ -351,6 +408,16 @@ function renderDebugPanel(snapshot) {
         </div>
 
         <div class="debug-block">
+            <div class="debug-label">Firefox</div>
+            <div class="debug-value">${escapeHtml(snapshot.browserInfo || 'Unknown')}</div>
+        </div>
+
+        <div class="debug-block">
+            <div class="debug-label">OS</div>
+            <div class="debug-value">${escapeHtml(snapshot.osInfo || 'Unknown')}</div>
+        </div>
+
+        <div class="debug-block">
             <div class="debug-label">Versions</div>
             <div class="debug-value">Extension: ${escapeHtml(normalizeVersion(snapshot.installedVersions.extensionVersion))} | ${escapeHtml(normalizeVersion(snapshot.latestVersions.extensionVersion))}</div>
             <div class="debug-value">Native App: ${escapeHtml(normalizeVersion(snapshot.installedVersions.nativeAppVersion))} | ${escapeHtml(normalizeVersion(snapshot.latestVersions.nativeAppVersion))}</div>
@@ -368,10 +435,42 @@ function renderDebugPanel(snapshot) {
     `;
 }
 
-function buildDebugClipboardText(snapshot) {
+async function buildDebugClipboardText(snapshot) {
     const lines = [];
 
+    // Get browser and OS info
+    let browserInfo = '';
+    let osInfo = '';
+    
+    try {
+        const browserData = await browser.runtime.getBrowserInfo();
+        browserInfo = `${browserData.name} ${browserData.version}`;
+    } catch {
+        browserInfo = 'Unknown';
+    }
+    
+    try {
+        const platformData = await browser.runtime.getPlatformInfo();
+        const osMap = {
+            'win': 'Windows',
+            'mac': 'macOS',
+            'android': 'Android',
+            'cros': 'Chrome OS',
+            'linux': 'Linux',
+            'openbsd': 'OpenBSD',
+            'fuchsia': 'Fuchsia'
+        };
+        osInfo = osMap[platformData.os] || platformData.os;
+        if (platformData.arch) {
+            osInfo += ` (${platformData.arch})`;
+        }
+    } catch {
+        osInfo = 'Unknown';
+    }
+
     lines.push(`Last Update: ${snapshot.collectedAt}`);
+    lines.push(`Firefox: ${browserInfo}`);
+    lines.push(`OS: ${osInfo}`);
     lines.push('Versions:');
     lines.push(`Extension: ${normalizeVersion(snapshot.installedVersions.extensionVersion)} | ${normalizeVersion(snapshot.latestVersions.extensionVersion)}`);
     lines.push(`Native App: ${normalizeVersion(snapshot.installedVersions.nativeAppVersion)} | ${normalizeVersion(snapshot.latestVersions.nativeAppVersion)}`);
@@ -419,7 +518,7 @@ async function getPopupSettingsForCopy() {
 async function copyDebugSnapshot() {
     if (!debugSnapshot) return;
 
-    let text = buildDebugClipboardText(debugSnapshot);
+    let text = await buildDebugClipboardText(debugSnapshot);
 
     if (includeSettingsToggle && includeSettingsToggle.checked) {
         const popupSettings = await getPopupSettingsForCopy();

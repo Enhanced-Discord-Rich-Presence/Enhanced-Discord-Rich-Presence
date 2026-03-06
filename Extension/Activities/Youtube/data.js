@@ -192,32 +192,78 @@ async function getVideoThumbnail(url) {
     try {
         const videoId = new URL(url).searchParams.get('v');
         if (!videoId) return "";
-        
-        // Try different thumbnail qualities in order of preference (because sometimes they don't exist)
-        const qualities = [
-            'maxresdefault',  // 1920x1080
-            'sddefault',      // 640x480
-            'hqdefault'       // 480x360
+
+        // Prefer highest quality first and verify real dimensions to avoid placeholder false positives.
+        const candidates = [
+            { quality: 'maxresdefault', minWidth: 1200, minHeight: 675 },
+            { quality: 'sddefault', minWidth: 640, minHeight: 360 },
+            { quality: 'hqdefault', minWidth: 480, minHeight: 270 },
+            { quality: 'mqdefault', minWidth: 320, minHeight: 180 }
         ];
-        
-        for (const quality of qualities) {
-            const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
-            try {
-                // Quick check if image exists and is valid
-                const response = await fetch(thumbnailUrl, { method: 'HEAD' });
-                if (response.ok) {
-                    return thumbnailUrl;
-                }
-            } catch {
-                continue;
-            }
+
+        for (const candidate of candidates) {
+            const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/${candidate.quality}.jpg`;
+            const isUsable = await isUsableThumbnailUrl(thumbnailUrl, candidate.minWidth, candidate.minHeight);
+            if (isUsable) return thumbnailUrl;
         }
-        
-        // Fallback to default if everything else fails
-        return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+        // Use a stable icon when no usable thumbnail is available (i.e. private videos).
+        return "youtube";
     } catch {
-        return "";
+        return "youtube";
     }
+}
+
+function getThumbnailQualityRank(url) {
+    const value = String(url || '').toLowerCase();
+    if (value.includes('maxresdefault')) return 5;
+    if (value.includes('sddefault')) return 4;
+    if (value.includes('hqdefault')) return 3;
+    if (value.includes('mqdefault')) return 2;
+    if (value.includes('/default.')) return 1;
+    return 0;
+}
+
+function isUsableThumbnailUrl(url, minWidth, minHeight) {
+    return new Promise((resolve) => {
+        try {
+            const img = new Image();
+            let settled = false;
+
+            const finish = (ok) => {
+                if (settled) return;
+                settled = true;
+                resolve(ok);
+            };
+
+            const timeout = setTimeout(() => finish(false), 2200);
+
+            img.onload = () => {
+                clearTimeout(timeout);
+                const width = Number(img.naturalWidth || 0);
+                const height = Number(img.naturalHeight || 0);
+
+                // Placeholder/missing thumbnails are typically tiny (e.g. 120x90).
+                if (width < minWidth || height < minHeight) {
+                    finish(false);
+                    return;
+                }
+
+                finish(true);
+            };
+
+            img.onerror = () => {
+                clearTimeout(timeout);
+                finish(false);
+            };
+
+            img.decoding = 'async';
+            img.referrerPolicy = 'no-referrer';
+            img.src = `${url}${url.includes('?') ? '&' : '?'}_=${Date.now()}`;
+        } catch {
+            resolve(false);
+        }
+    });
 }
 
 function getAuthorData() {

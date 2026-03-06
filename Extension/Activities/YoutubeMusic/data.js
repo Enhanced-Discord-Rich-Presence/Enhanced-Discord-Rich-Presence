@@ -25,9 +25,9 @@ function interpolateBrowsingPlaceholders(text, data) {
 }
 
 function getQueueItem() {
-	return document.querySelector('ytmusic-player-queue-item[selected]')
-		|| document.querySelector('ytmusic-player-queue-item[play-button-state="playing"]')
+	return document.querySelector('ytmusic-player-queue-item[play-button-state="playing"]')
 		|| document.querySelector('ytmusic-player-queue-item[play-button-state="paused"]')
+		|| document.querySelector('ytmusic-player-queue-item[selected]')
 		|| null;
 }
 
@@ -41,22 +41,49 @@ function parseTimeString(timeString) {
 
 function isMusicCurrentlyPlaying() {
 	const queueItem = getQueueItem();
-	if (!queueItem) return false;
-	const state = queueItem.getAttribute('play-button-state');
-	return state && state.toLowerCase() !== 'paused';
+	if (queueItem) {
+		const state = queueItem.getAttribute('play-button-state');
+		if (state) return state.toLowerCase() !== 'paused';
+	}
+
+	// Fallback to player bar controls when queue state is missing.
+	const playerBar = document.querySelector('ytmusic-player-bar');
+	const playButton = playerBar?.querySelector('tp-yt-paper-icon-button.play-pause-button');
+	const title = (playButton?.getAttribute('title') || '').toLowerCase();
+	if (title.includes('pause')) return true;
+	if (title.includes('play')) return false;
+
+	const video = document.querySelector('video');
+	if (video) return !video.paused;
+
+	return false;
 }
 
 function getCleanTitle() {
 	const queueItem = getQueueItem();
-	if (!queueItem) return null;
-	const titleElement = queueItem.querySelector('.song-title');
-	const title = titleElement?.textContent?.trim();
-	return title || null;
+	if (queueItem) {
+		const titleElement = queueItem.querySelector('.song-title');
+		const title = titleElement?.textContent?.trim();
+		if (title) return title;
+	}
+
+	const playerBarTitle = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar .content-info-wrapper .title')
+		?.textContent?.trim();
+	return playerBarTitle || null;
 }
 
 function getAuthorData() {
 	const queueItem = getQueueItem();
-	if (!queueItem) return { name: "YouTube Music", url: "", avatar: "" };
+	if (!queueItem) {
+		const playerBar = document.querySelector('ytmusic-player-bar');
+		const playerBylineLink = playerBar?.querySelector('.byline a, .content-info-wrapper .byline a');
+		const playerBylineText = playerBylineLink?.textContent?.trim()
+			|| playerBar?.querySelector('.byline, .content-info-wrapper .byline')?.textContent?.trim()
+			|| "YouTube Music";
+
+		const playerArtist = String(playerBylineText).split(/[•·]/)[0].trim() || "YouTube Music";
+		return { name: playerArtist, url: playerBylineLink?.href || "", avatar: "" };
+	}
 
 	const bylineElement = queueItem.querySelector('.byline');
 	const artistLink = bylineElement?.querySelector('a');

@@ -5,6 +5,7 @@ let lastSentTitle = "";
 let lastSentUrl = "";
 let lastSentThumbnail = "";
 let lastSentAuthorAvatar = "";
+const pendingThumbnailRefreshTimers = new Map();
 
 let lastBrowsingActivityKey = null;
 let lastBrowsingActivityText = null;
@@ -188,6 +189,63 @@ async function sendToBackground(action) {
         action,
         payload
     });
+
+    scheduleThumbnailUpgradeSync(action, payload);
+}
+
+function scheduleThumbnailUpgradeSync(action, payload) {
+    const payloadUrl = payload && payload.url ? String(payload.url) : '';
+    if (!payloadUrl) return;
+
+    const videoId = extractVideoId(payloadUrl);
+    if (!videoId) return;
+
+    const existing = pendingThumbnailRefreshTimers.get(videoId);
+    if (existing) {
+        existing.forEach((timerId) => clearTimeout(timerId));
+    }
+
+    const schedule = [2500, 6500];
+    const timers = schedule.map((delayMs) => setTimeout(async () => {
+        const liveUrl = window.location.href;
+        if (extractVideoId(liveUrl) !== videoId) return;
+
+        const bestThumbnail = await getVideoThumbnail(liveUrl);
+        if (!bestThumbnail) return;
+
+        const currentRank = getThumbnailQualityRank(lastSentThumbnail);
+        const bestRank = getThumbnailQualityRank(bestThumbnail);
+        const thumbnailChanged = bestThumbnail !== lastSentThumbnail;
+
+        if (!thumbnailChanged || bestRank < currentRank) return;
+
+        const video = document.querySelector('video');
+        const currentPayload = {
+            ...payload,
+            url: liveUrl,
+            title: getCleanTitle() || payload.title,
+            author: (getAuthorData().name || payload.author || "YouTube Artist"),
+            author_url: getAuthorData().url || payload.author_url,
+            author_avatar: getAuthorData().avatar || payload.author_avatar,
+            thumbnail: bestThumbnail,
+            time: video ? video.currentTime : payload.time,
+            duration: video ? video.duration : payload.duration,
+            timestamp: new Date().toISOString()
+        };
+
+        lastSentThumbnail = bestThumbnail;
+        browser.runtime.sendMessage({ action, payload: currentPayload });
+    }, delayMs));
+
+    pendingThumbnailRefreshTimers.set(videoId, timers);
+}
+
+function extractVideoId(url) {
+    try {
+        return new URL(String(url || '')).searchParams.get('v') || '';
+    } catch {
+        return '';
+    }
 }
 
 function observeOwnerChanges() {

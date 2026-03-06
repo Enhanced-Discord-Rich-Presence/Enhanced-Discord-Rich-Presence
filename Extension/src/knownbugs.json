@@ -1,29 +1,17 @@
 {
-  "date": "2026-02-28",
+  "date": "2026-03-6",
   "bugs": [
     {
       "title": "Youtube: Multiple Channels",
       "description": "If the playing Youtube Video has multiple channels, it will say \"Unknown Author\"."
     },
     {
-      "title": "Youtube Music Popup",
-      "description": "Sometimes if Youtube Music streams the Browsing Activities and you leave and re-enter the page, it will show a popup. Don't worry it doesn't reset the time or so, it only shows you the TOAST again."
-    },
-    {
-      "title": "Youtube Music: Time Reset",
-      "description": "If you seek in a song, minimize or maximize the window, it sets the time to 0 again. It resets when you pause and unpause or when the song changes."
-    },
-    {
-      "title": "Browsing Activities Popup",
-      "description": "Even if you disabled the RPC, it will still show the popup when it WOULD stream Brwosing Activities. It doesn't actually stream anything, but still shows it."
-    },
-    {
-      "title": "Incorrect Native App Version shown",
-      "description": "For some reason, the Extension currently shows the Native App Version as 1.1.10 even though it is Version 1.1.0. This is just a display issue, you do have the Version 1.1.0."
-    },
-    {
       "title": "Youtube Livestreams",
       "description": "The timer behaves weirdly if you have \"Show current time of the video\" and/or \"Show length of the video\" enabled. Shortly:\nBoth Disabled: Tracks session duration\nBoth Enabled: Shows runtime out of +1 hour\nOnly \"Show current time of the video\" Enabled: Shows stream runtime (breaks on long-duration streams like LofiGirl)\nOnly \"Show length of the video\" Enabled: Counts down from 1 hour"
+    },
+    {
+      "title": "Seeking/Minimizing/Maximizing Youtube Music",
+      "description": "If you seek while the song is minimized, minimize or maximize it, it sometimes resets the time to 0 but after like 4 seconds it jumps back to the correct time."
     }
   ]
 }

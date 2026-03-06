@@ -227,6 +227,7 @@ body {
 #bugs-content {
     padding: 10px 12px 12px;
     overflow: auto;
+    max-height: 400px;
     font-size: 11px;
     line-height: 1.45;
     color: var(--text-dim);

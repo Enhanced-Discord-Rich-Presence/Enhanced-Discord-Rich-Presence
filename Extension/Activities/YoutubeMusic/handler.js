@@ -1,5 +1,8 @@
 let titleObserver = null;
 
+const ENABLE_PLAYING_TAB_HEALTH_CHECK = true;
+const PLAYING_TAB_HEALTH_CHECK_INTERVAL_MS = 5000;
+
 let lastSentTitle = "";
 let lastSentUrl = "";
 let lastSentThumbnail = "";
@@ -7,6 +10,7 @@ let lastSentAuthor = "";
 let lastSentAuthorUrl = "";
 let lastSentPlaying = null;
 let lastSentTrackKey = "";
+let lastSentTime = 0;
 
 let lastBrowsingActivityKey = null;
 let lastBrowsingActivityText = null;
@@ -15,6 +19,7 @@ let browsingActivityCheckInterval = null;
 
 let cachedInformationPopups = null;
 let cachedRpcYoutubeMusic = null;
+let playingTabHealthCheckInFlight = false;
 
 async function refreshCachedSettings() {
 	try {
@@ -64,7 +69,10 @@ async function checkBrowsingActivity() {
 		|| rpcYoutubeMusic.running?.browsingActivities;
 	if (!browsingActivities || !browsingActivities.enabled) return;
 
-	const musicEnabled = rpcYoutubeMusic.running?.enabled ?? rpcYoutubeMusic.enabled ?? true;
+	const musicEnabled = rpcYoutubeMusic.running?.enabled
+		?? rpcYoutubeMusic.paused?.enabled
+		?? rpcYoutubeMusic.enabled
+		?? true;
 	if (musicEnabled === false) return;
 
 	const activities = browsingActivities.activities || {};
@@ -205,6 +213,7 @@ async function sendToBackground(action, isNewTrack = false) {
 	lastSentAuthorUrl = payload.author_url;
 	lastSentPlaying = (action === "VIDEO_RESUMED");
 	lastSentTrackKey = currentTrackKey;
+	lastSentTime = payload.time;
 	lastBrowsingActivityKey = null;
 	lastBrowsingActivityText = null;
 	browsingActivityStartTime = null;
@@ -226,11 +235,13 @@ async function checkMetadataConsistency() {
 	const currentThumbnail = getThumbnailUrl();
 	const authorData = getAuthorData();
     const currentTrackKey = getStableTrackKey();
+	const currentTime = getCurrentTime();
 
 	const titleChanged = currentTitle !== lastSentTitle;
 	const urlChanged = currentUrl !== lastSentUrl;
 	const thumbnailChanged = (currentThumbnail || "") !== (lastSentThumbnail || "");
 	const authorChanged = (authorData.name || "") !== (lastSentAuthor || "") || (authorData.url || "") !== (lastSentAuthorUrl || "");
+	const timeChanged = Math.abs(currentTime - lastSentTime) > 3;
 
 	
 	const currentlyPlaying = isMusicCurrentlyPlaying();
@@ -238,7 +249,7 @@ async function checkMetadataConsistency() {
 
 	
 	const isNewTrack = currentTrackKey !== lastSentTrackKey;
-	const hasSignificantChange = isNewTrack || playStateChanged || authorChanged;
+	const hasSignificantChange = isNewTrack || playStateChanged || authorChanged || titleChanged || urlChanged || thumbnailChanged || (timeChanged && !isNewTrack);
 	const isDataValid = !!currentTitle;
 
 	if (hasSignificantChange && isDataValid) {
@@ -257,6 +268,31 @@ async function checkMetadataConsistency() {
 	}
 }
 
+async function ensurePlayingTabSelectedForRpc() {
+	if (!ENABLE_PLAYING_TAB_HEALTH_CHECK) return;
+	if (playingTabHealthCheckInFlight) return;
+
+	const queueItem = getQueueItem();
+	if (!queueItem) return;
+
+	const title = getCleanTitle();
+	if (!title) return;
+
+	if (!isMusicCurrentlyPlaying()) return;
+
+	playingTabHealthCheckInFlight = true;
+	try {
+		await browser.runtime.sendMessage({
+			action: "ENSURE_YTMUSIC_PLAYING_TAB_SELECTED",
+			isPlaying: true,
+			title
+		});
+	} catch { }
+	finally {
+		playingTabHealthCheckInFlight = false;
+	}
+}
+
 function setupTitleObserver() {
 	if (titleObserver) titleObserver.disconnect();
 	const container = document.querySelector('ytmusic-player-queue #contents')
@@ -264,6 +300,44 @@ function setupTitleObserver() {
 	if (!container) return;
 	titleObserver = new MutationObserver(() => checkMetadataConsistency());
 	titleObserver.observe(container, { childList: true, subtree: true, attributes: true, characterData: true });
+}
+
+function setupVideoEventListeners() {
+	const video = document.querySelector('video');
+	if (!video) return;
+
+	// Remove existing listeners if any to avoid duplicates
+	if (video._ytmusicSeekHandler) {
+		video.removeEventListener('seeked', video._ytmusicSeekHandler);
+	}
+	if (video._ytmusicTimeUpdateHandler) {
+		video.removeEventListener('timeupdate', video._ytmusicTimeUpdateHandler);
+	}
+
+	// Handle seeking - immediately update time
+	const seekHandler = () => {
+		const queueItem = getQueueItem();
+		if (queueItem && lastSentPlaying !== null) {
+			checkMetadataConsistency();
+		}
+	};
+	video._ytmusicSeekHandler = seekHandler;
+	video.addEventListener('seeked', seekHandler);
+
+	// Handle time updates - throttled to avoid excessive updates
+	let lastTimeUpdate = 0;
+	const timeUpdateHandler = () => {
+		const now = Date.now();
+		if (now - lastTimeUpdate > 5000) { // Only update every 5 seconds
+			lastTimeUpdate = now;
+			const queueItem = getQueueItem();
+			if (queueItem && lastSentPlaying !== null) {
+				checkMetadataConsistency();
+			}
+		}
+	};
+	video._ytmusicTimeUpdateHandler = timeUpdateHandler;
+	video.addEventListener('timeupdate', timeUpdateHandler);
 }
 
 async function handleNavigation() {
@@ -279,6 +353,7 @@ async function handleNavigation() {
 	browsingActivityStartTime = null;
 
 	setupTitleObserver();
+	setupVideoEventListeners();
 	checkBrowsingActivity();
 
 	
@@ -305,14 +380,24 @@ document.addEventListener("visibilitychange", () => {
 		setupTitleObserver();
 		checkBrowsingActivity();
 	}
+	// Always ensure video listeners are set up, even when hidden
+	setupVideoEventListeners();
 });
 
 // Check for track activity every 2 seconds
 setInterval(() => {
 	if (getQueueItem()) {
 		checkMetadataConsistency();
+		// Periodically ensure video listeners are attached
+		setupVideoEventListeners();
 	}
 }, 2000);
+
+if (ENABLE_PLAYING_TAB_HEALTH_CHECK) {
+	setInterval(() => {
+		ensurePlayingTabSelectedForRpc();
+	}, PLAYING_TAB_HEALTH_CHECK_INTERVAL_MS);
+}
 
 // Check for browsing activity every 1 second
 if (browsingActivityCheckInterval) clearInterval(browsingActivityCheckInterval);
@@ -349,9 +434,6 @@ browser.runtime.onMessage.addListener(async (message) => {
 				});
 			}
 		} else {
-			
-			lastBrowsingActivityKey = null;
-			lastBrowsingActivityText = null;
 			await checkBrowsingActivity();
 		}
 	}
