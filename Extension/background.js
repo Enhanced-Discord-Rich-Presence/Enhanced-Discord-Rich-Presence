@@ -681,17 +681,6 @@ function isDisplayableUrl(url) {
     }
 }
 
-function isProjectGitHubPage(url) {
-    if (!url) return false;
-    try {
-        const u = new URL(url);
-        return u.hostname === 'github.com' &&
-            u.pathname.toLowerCase().startsWith('/enhanced-discord-rich-presence/');
-    } catch {
-        return false;
-    }
-}
-
 function isYoutubeUrl(url) {
     if (!url) return false;
     try {
@@ -739,9 +728,6 @@ async function tryShowPendingUpdateModal(tabId, url) {
     if (!isDisplayableUrl(url)) return;
 
     if (isNativeBlocking && !isYoutubeOrMusicUrl(url)) return;
-
-    // Don't show "Native App Not Installed" on the project's GitHub page
-    if (isNativeBlocking && isProjectGitHubPage(url)) return;
 
     if (isNativeBlocking) {
         const status = await probeNativeHost();
