@@ -48,7 +48,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["<all_urls>"],
+      "matches": ["*://*.youtube.com/*", "*://music.youtube.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

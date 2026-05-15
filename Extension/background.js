@@ -681,12 +681,14 @@ function isDisplayableUrl(url) {
     }
 }
 
-function isProjectGitHubPage(url) {
+function isYoutubeUrl(url) {
     if (!url) return false;
     try {
         const u = new URL(url);
-        return u.hostname === 'github.com' &&
-            u.pathname.toLowerCase().startsWith('/enhanced-discord-rich-presence/');
+        const host = String(u.hostname || '').toLowerCase();
+        return host === 'youtube.com'
+            || host === 'www.youtube.com'
+            || host === 'music.youtube.com';
     } catch {
         return false;
     }
@@ -725,8 +727,7 @@ async function tryShowPendingUpdateModal(tabId, url) {
     if (!isNativeBlocking && updateModalTargetTabId && tabId !== updateModalTargetTabId) return;
     if (!isDisplayableUrl(url)) return;
 
-    // Don't show "Native App Not Installed" on the project's GitHub page
-    if (isNativeBlocking && isProjectGitHubPage(url)) return;
+    if (isNativeBlocking && !isYoutubeOrMusicUrl(url)) return;
 
     if (isNativeBlocking) {
         const status = await probeNativeHost();
@@ -759,6 +760,7 @@ function scheduleTryShowUpdateModal(tabId, url) {
     const isNativeBlocking = pendingUpdateModal.kind === 'native_missing' || pendingUpdateModal.kind === 'native_invalid';
     if (!isNativeBlocking && updateModalTargetTabId && tabId !== updateModalTargetTabId) return;
     if (!isDisplayableUrl(url)) return;
+    if (isNativeBlocking && !isYoutubeOrMusicUrl(url)) return;
 
     const maxAttempts = 40;
     const current = updateModalRetryByTab.get(tabId);
