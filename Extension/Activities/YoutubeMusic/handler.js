@@ -194,6 +194,8 @@ async function sendToBackground(action) {
 	const thumbnail = getThumbnailUrl() || "youtubemusic";
 	const currentTrackKey = getStableTrackKey();
 
+	const isNewTrack = currentTrackKey !== lastSentTrackKey;
+
 	const payload = {
 		url: currentUrl,
 		title,
@@ -202,7 +204,7 @@ async function sendToBackground(action) {
 		author_avatar: "youtubemusic",
 		thumbnail,
 		time: getCurrentTime(),
-		duration: getDuration(),
+		duration: isNewTrack ? 0 : getDuration(),
 		timestamp: new Date().toISOString(),
 	};
 
@@ -308,6 +310,9 @@ function setupVideoEventListeners() {
 		video.removeEventListener('timeupdate', video._ytmusicTimeUpdateHandler);
 		delete video._ytmusicTimeUpdateHandler;
 	}
+	if (video._ytmusicMetadataHandler) {
+		video.removeEventListener('loadedmetadata', video._ytmusicMetadataHandler);
+	}
 
 	const seekHandler = () => {
 		const queueItem = getQueueItem();
@@ -317,6 +322,16 @@ function setupVideoEventListeners() {
 	};
 	video._ytmusicSeekHandler = seekHandler;
 	video.addEventListener('seeked', seekHandler);
+
+	// Re-send once metadata loads so the correct duration replaces any zeroed placeholder
+	const metadataHandler = () => {
+		const queueItem = getQueueItem();
+		if (queueItem && lastSentPlaying !== null) {
+			sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
+		}
+	};
+	video._ytmusicMetadataHandler = metadataHandler;
+	video.addEventListener('loadedmetadata', metadataHandler);
 }
 
 async function handleNavigation() {
