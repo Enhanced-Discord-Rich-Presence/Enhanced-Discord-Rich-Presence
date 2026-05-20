@@ -421,10 +421,11 @@ document.addEventListener("visibilitychange", () => {
 
 setInterval(() => {
     if (isVideoPage()) {
-        attachListeners();
+        const video = document.querySelector('video');
+        if (video && !video._rpcPlayHandler) attachListeners();
         checkMetadataConsistency();
     }
-}, 1000);
+}, 100);
 
 // Check for browsing activity every 1 second
 if (browsingActivityCheckInterval) clearInterval(browsingActivityCheckInterval);
