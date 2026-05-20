@@ -475,7 +475,11 @@ def main():
                                     bridge._render_rpc(last_msg)
                                     continue
                             
-                            active_cfg = youtube_settings.get("running", {})
+                            last_action = last_msg.get("action")
+                            if last_action == "VIDEO_PAUSED":
+                                active_cfg = youtube_settings.get("paused", {})
+                            else:
+                                active_cfg = youtube_settings.get("running", {})
                         last_msg["settings"] = active_cfg
                         bridge._render_rpc(last_msg)
 
