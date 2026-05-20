@@ -234,7 +234,8 @@ function scheduleThumbnailUpgradeSync(action, payload) {
         };
 
         lastSentThumbnail = bestThumbnail;
-        browser.runtime.sendMessage({ action, payload: currentPayload });
+        const currentAction = video && video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED"; // keep track of paused state so RPC doesn't show misleading info
+        browser.runtime.sendMessage({ action: currentAction, payload: currentPayload });
     }, delayMs));
 
     pendingThumbnailRefreshTimers.set(videoId, timers);
