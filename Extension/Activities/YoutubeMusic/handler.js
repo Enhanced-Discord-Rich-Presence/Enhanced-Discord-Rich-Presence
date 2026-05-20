@@ -325,8 +325,7 @@ function setupVideoEventListeners() {
 
 	// Re-send once metadata loads so the correct duration replaces any zeroed placeholder
 	const metadataHandler = () => {
-		const queueItem = getQueueItem();
-		if (queueItem && lastSentPlaying !== null) {
+		if (getQueueItem() && getCleanTitle()) {
 			sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
 		}
 	};
@@ -350,9 +349,17 @@ async function handleNavigation() {
 	setupVideoEventListeners();
 	checkBrowsingActivity();
 
-	
+	// Try immediate send if the track data is already in the DOM
+	const queueItem = getQueueItem();
+	const title = queueItem ? getCleanTitle() : null;
+	if (title && queueItem) {
+		sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
+		return;
+	}
+
+	// Fall back to a rapid poll until the track data is ready
 	let attempts = 0;
-	const checkMetadata = setInterval(async () => {
+	const checkMetadata = setInterval(() => {
 		const queueItem = getQueueItem();
 		const title = queueItem ? getCleanTitle() : null;
 
@@ -361,7 +368,7 @@ async function handleNavigation() {
 			clearInterval(checkMetadata);
 		}
 		attempts++;
-	}, 200);
+	}, 50);
 }
 
 document.addEventListener('yt-navigate-finish', handleNavigation);

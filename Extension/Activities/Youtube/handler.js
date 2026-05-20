@@ -149,7 +149,7 @@ async function checkBrowsingActivity() {
     }
 }
 
-async function sendToBackground(action) {
+function sendToBackground(action) {
     if (!isVideoPage()) return;
 
     const title = getCleanTitle();
@@ -163,7 +163,8 @@ async function sendToBackground(action) {
 
     const video = document.querySelector('video');
     const currentUrl = window.location.href;
-    const thumbnail = await getVideoThumbnail(currentUrl);
+    const ogMeta = document.querySelector('meta[property="og:image"]');
+    const thumbnail = (ogMeta && ogMeta.content) ? ogMeta.content : "youtube";
 
     const payload = {
         url: currentUrl,
@@ -360,11 +361,24 @@ async function handleNavigation() {
 
     if (!isVideoPage()) {
         checkBrowsingActivity();
+        return;
     }
 
     if (navigationPollInterval) clearInterval(navigationPollInterval);
+
+    // Attach listeners immediately so the loadedmetadata event can fire the first send
+    attachListeners();
+
+    // If metadata is already available, send immediately without waiting for a poll tick
+    const video = document.querySelector('video');
+    if (video && video.readyState >= 1 && getCleanTitle()) {
+        sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
+        return;
+    }
+
+    // Fall back to a rapid poll for when the page isn't ready yet
     let attempts = 0;
-    navigationPollInterval = setInterval(async () => {
+    navigationPollInterval = setInterval(() => {
         if (!isVideoPage()) {
             clearInterval(navigationPollInterval);
             navigationPollInterval = null;
@@ -382,7 +396,7 @@ async function handleNavigation() {
             navigationPollInterval = null;
         }
         attempts++;
-    }, 200);
+    }, 50);
 }
 
 document.addEventListener('yt-navigate-finish', handleNavigation);
