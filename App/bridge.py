@@ -233,7 +233,8 @@ class MultiServiceBridge:
                 
                 if end_val:
                     if isinstance(end_val, bool):
-                        timestamps["end"] = int(now + (total_duration - current_time))
+                        if total_duration > 0:
+                            timestamps["end"] = int(now + (total_duration - current_time))
                     elif isinstance(end_val, (int, float)):
                         timestamps["end"] = int(end_val)
             else:
