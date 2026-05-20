@@ -280,14 +280,19 @@ function attachListeners() {
         if (video._rpcMetadataHandler) video.removeEventListener('loadedmetadata', video._rpcMetadataHandler);
 
         const triggerSync = () => sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
-        const pauseHandler = () => { if (!video.seeking) triggerSync(); };
+        let debounceTimer = null;
+        const debouncedTriggerSync = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => triggerSync(), 150);
+        };
+        const pauseHandler = () => { if (!video.seeking) debouncedTriggerSync(); };
 
-        video._rpcPlayHandler = triggerSync;
+        video._rpcPlayHandler = debouncedTriggerSync;
         video._rpcPauseHandler = pauseHandler;
         video._rpcSeekedHandler = triggerSync;
         video._rpcMetadataHandler = triggerSync;
 
-        video.addEventListener('play', triggerSync);
+        video.addEventListener('play', debouncedTriggerSync);
         video.addEventListener('pause', pauseHandler);
         video.addEventListener('seeked', triggerSync);
         video.addEventListener('loadedmetadata', triggerSync);
@@ -400,13 +405,12 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// Check for video activity every 2 seconds
 setInterval(() => {
     if (isVideoPage()) {
         attachListeners();
         checkMetadataConsistency();
     }
-}, 2000);
+}, 1000);
 
 // Check for browsing activity every 1 second
 if (browsingActivityCheckInterval) clearInterval(browsingActivityCheckInterval);
