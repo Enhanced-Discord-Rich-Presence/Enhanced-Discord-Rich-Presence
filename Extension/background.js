@@ -1454,6 +1454,13 @@ setTimeout(() => {
     checkForNativeAppUpdate();
 }, 2000);
 
+// On background script startup, content scripts on already-open tabs still have
+// their old state and won't re-send unless asked. Kick a sync so the bridge gets
+// current activity without requiring the user to reload the tab.
+setTimeout(() => {
+    syncActiveTabs();
+}, 500);
+
 browser.runtime.onSuspend.addListener(() => {
     const port = getNativePort();
     if (port) port.postMessage({ action: "CLEAR_RPC" });
