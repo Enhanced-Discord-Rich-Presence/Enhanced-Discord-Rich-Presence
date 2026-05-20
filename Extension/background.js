@@ -1274,19 +1274,17 @@ browser.tabs.onRemoved.addListener((tabId) => {
         const port = getNativePort();
         if (!port) return;
 
-        let selected = {};
+        port.postMessage({ action: "TAB_CLOSED", tabId: tabId });
+
         try {
             const status = await requestNativeStatus(700);
-            selected = (status && status.selected_tabs) || {};
+            const selected = (status && status.selected_tabs) || {};
+            Object.entries(selected).forEach(([service, selectedTabId]) => {
+                if (String(selectedTabId) === String(tabId)) {
+                    port.postMessage({ action: "CLEAR_SERVICE", service });
+                }
+            });
         } catch { }
-
-        Object.entries(selected).forEach(([service, selectedTabId]) => {
-            if (String(selectedTabId) === String(tabId)) {
-                port.postMessage({ action: "CLEAR_SERVICE", service });
-            }
-        });
-
-        port.postMessage({ action: "TAB_CLOSED", tabId: tabId });
     })();
 });
 
