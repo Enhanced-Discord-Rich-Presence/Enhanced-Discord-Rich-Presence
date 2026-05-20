@@ -173,7 +173,7 @@ async function sendToBackground(action) {
         author_avatar: authorData.avatar,
         thumbnail,
         time: video ? video.currentTime : 0,
-        duration: video ? video.duration : 0,
+        duration: (video && isFinite(video.duration) && video.duration > 0) ? video.duration : 0,
         timestamp: new Date().toISOString()
     };
 
@@ -229,7 +229,7 @@ function scheduleThumbnailUpgradeSync(action, payload) {
             author_avatar: getAuthorData().avatar || payload.author_avatar,
             thumbnail: bestThumbnail,
             time: video ? video.currentTime : payload.time,
-            duration: video ? video.duration : payload.duration,
+            duration: (video && isFinite(video.duration) && video.duration > 0) ? video.duration : payload.duration,
             timestamp: new Date().toISOString()
         };
 
