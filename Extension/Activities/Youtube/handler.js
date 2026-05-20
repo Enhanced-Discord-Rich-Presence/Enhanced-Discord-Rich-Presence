@@ -274,12 +274,21 @@ function attachListeners() {
         videoElement = video;
         video.dataset.lastSrc = video.currentSrc;
 
-        const triggerSync = () => sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
+        if (video._rpcPlayHandler) video.removeEventListener('play', video._rpcPlayHandler);
+        if (video._rpcPauseHandler) video.removeEventListener('pause', video._rpcPauseHandler);
+        if (video._rpcSeekedHandler) video.removeEventListener('seeked', video._rpcSeekedHandler);
+        if (video._rpcMetadataHandler) video.removeEventListener('loadedmetadata', video._rpcMetadataHandler);
 
-        video.removeEventListener('play', triggerSync);
-        video.removeEventListener('pause', triggerSync);
+        const triggerSync = () => sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
+        const pauseHandler = () => { if (!video.seeking) triggerSync(); };
+
+        video._rpcPlayHandler = triggerSync;
+        video._rpcPauseHandler = pauseHandler;
+        video._rpcSeekedHandler = triggerSync;
+        video._rpcMetadataHandler = triggerSync;
+
         video.addEventListener('play', triggerSync);
-        video.addEventListener('pause', () => { if (!video.seeking) triggerSync(); });
+        video.addEventListener('pause', pauseHandler);
         video.addEventListener('seeked', triggerSync);
         video.addEventListener('loadedmetadata', triggerSync);
 
