@@ -1,5 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+
+BASE_DIR = SPECPATH
+ICON_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'Extension', 'src', 'icons', 'icon.ico'))
 
 a = Analysis(
     ['bridge.py'],
@@ -35,4 +39,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=ICON_PATH
 )

@@ -3,7 +3,12 @@ import json
 import os
 import struct
 import time
-import win32file
+
+platform = sys.platform
+match platform:
+    case "win32":
+        import win32file
+
 from urllib.parse import urlparse, parse_qs
 
 
@@ -225,13 +230,13 @@ class MultiServiceBridge:
             has_video_data = total_duration > 0 or current_time > 0
             
             if has_video_data:
-                if start_val:
+                if start_val is not None and start_val is not False:
                     if isinstance(start_val, bool):
                         timestamps["start"] = int(now - current_time)
                     elif isinstance(start_val, (int, float)):
                         timestamps["start"] = int(start_val)
                 
-                if end_val:
+                if end_val is not None and end_val is not False:
                     if isinstance(end_val, bool):
                         timestamps["end"] = int(now + (total_duration - current_time))
                     elif isinstance(end_val, (int, float)):
@@ -239,7 +244,7 @@ class MultiServiceBridge:
             else:
                 timestamps["start"] = now
                 
-                if isinstance(end_val, (int, float)) and end_val > 0:
+                if end_val is not None and end_val is not False and isinstance(end_val, (int, float)) and end_val >= 0:
                     timestamps["end"] = int(end_val)
             
             activity = {}
@@ -248,7 +253,8 @@ class MultiServiceBridge:
             
             activity["type"] = int(settings.get("type", 0))
             activity["details"] = self._interpolate_placeholders(settings.get("details"), payload)
-            activity["state"] = self._interpolate_placeholders(settings.get("state"), payload)
+            state_text = self._interpolate_placeholders(settings.get("state"), payload)
+            activity["state"] = state_text
             
             if special_cfg.get("details_url", {}).get("enabled"):
                 details_url = self._interpolate_placeholders(special_cfg["details_url"].get("url"), payload)
@@ -427,7 +433,8 @@ def main():
                                     running_cfg = youtube_settings.get("running", {})
                                     base_config = paused_cfg.copy()
                                     base_config["details"] = BROWSING_ACTIVITY_LABELS.get(activity_key, "Browsing YouTube")
-                                    base_config["state"] = activity_data.get("text", "")
+                                    state_text = activity_data.get("text", "")
+                                    base_config["state"] = state_text
 
                                     paused_custom = (paused_cfg.get("special") or {}).get("custom_name") is True
                                     running_custom = (running_cfg.get("special") or {}).get("custom_name") is True

@@ -35,7 +35,7 @@
       },
       "timestamps": { "start": true, "end": true },
       "assets": {
-        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "" },
         "small": { "enabled": true, "small_image": "%author_avatar%", "small_text": "%author%" }
       },
       "buttons": {
@@ -56,7 +56,7 @@
       },
       "timestamps": { "start": false, "end": false },
       "assets": {
-        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "" },
         "small": { "enabled": true, "small_image": "%author_avatar%", "small_text": "%author%" }
       },
       "buttons": {
@@ -97,7 +97,7 @@
       },
       "timestamps": { "start": true, "end": true },
       "assets": {
-        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "" },
         "small": { "enabled": false, "small_image": "", "small_text": "" }
       },
       "buttons": {
@@ -118,7 +118,7 @@
       },
       "timestamps": { "start": false, "end": false },
       "assets": {
-        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "%title%" },
+        "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "" },
         "small": { "enabled": false, "small_image": "", "small_text": "" }
       },
       "buttons": {

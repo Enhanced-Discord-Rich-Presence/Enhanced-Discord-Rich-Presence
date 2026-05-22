@@ -23,6 +23,17 @@ let updateModalTargetTabId = null;
 let updateAvailableStatus = null; // { kind, localVersion, remoteVersion, url, downloadUrl }
 let dismissedUpdateKey = null; // `${localVersion}|${remoteVersion}`
 
+// Track update/native modal dismissals per tab so they only show once per tab.
+const dismissedUpdateModalByTab = new Map(); // tabId -> Set(kind)
+
+// When enabled, suppress update_available popups (native missing/invalid still show).
+let muteUpdateNotifications = false;
+try {
+    browser.storage.local.get('muteUpdateNotifications').then((st) => {
+        muteUpdateNotifications = st && st.muteUpdateNotifications === true;
+    }).catch(() => { });
+} catch { }
+
 const updateModalRetryByTab = new Map(); // tabId -> { attempts, url, timer }
 
 let nativeRecoveryTimer = null;
@@ -108,6 +119,18 @@ function getServiceFromUrl(url) {
     if (u.includes('music.youtube.com')) return 'YoutubeMusic';
     if (u.includes('youtube.com')) return 'Youtube';
     return null;
+}
+
+function normalizeDisabledActivityTypes(settings) {
+    if (!settings || typeof settings !== 'object') return settings;
+    const rawType = settings.type;
+    const numericType = (typeof rawType === 'number') ? rawType : Number(rawType);
+
+    // Playing (0) is currently disabled due to issues.
+    if (Number.isFinite(numericType) && numericType === 0) {
+        return { ...settings, type: 3 };
+    }
+    return settings;
 }
 
 function clearNativeRecoveryTimer() {
@@ -749,10 +772,16 @@ async function tryShowPendingUpdateModal(tabId, url) {
     if (!pendingUpdateModal) return;
     if (!tabId) return;
     const isNativeBlocking = pendingUpdateModal.kind === 'native_missing' || pendingUpdateModal.kind === 'native_invalid';
-    if (!isNativeBlocking && updateModalTargetTabId && tabId !== updateModalTargetTabId) return;
     if (!isDisplayableUrl(url)) return;
 
-    if (isNativeBlocking && !isYoutubeOrMusicUrl(url)) return;
+    // Only show these popups on YouTube / YouTube Music pages
+    if (!isYoutubeUrl(url)) return;
+
+    // If muted, suppress only the update_available popup.
+    if (!isNativeBlocking && pendingUpdateModal.kind === 'update_available' && muteUpdateNotifications) return;
+
+    const dismissed = dismissedUpdateModalByTab.get(tabId);
+    if (dismissed && dismissed.has(pendingUpdateModal.kind)) return;
 
     if (isNativeBlocking) {
         const status = await probeNativeHost();
@@ -771,8 +800,6 @@ async function tryShowPendingUpdateModal(tabId, url) {
             action: "show_update_modal",
             data: pendingUpdateModal
         });
-        if (!isNativeBlocking && !updateModalTargetTabId) updateModalTargetTabId = tabId;
-
         const st = updateModalRetryByTab.get(tabId);
         if (st && st.timer) clearTimeout(st.timer);
         updateModalRetryByTab.delete(tabId);
@@ -783,9 +810,14 @@ function scheduleTryShowUpdateModal(tabId, url) {
     if (!pendingUpdateModal) return;
     if (!tabId) return;
     const isNativeBlocking = pendingUpdateModal.kind === 'native_missing' || pendingUpdateModal.kind === 'native_invalid';
-    if (!isNativeBlocking && updateModalTargetTabId && tabId !== updateModalTargetTabId) return;
     if (!isDisplayableUrl(url)) return;
-    if (isNativeBlocking && !isYoutubeOrMusicUrl(url)) return;
+    if (!isYoutubeUrl(url)) return;
+
+    // If muted, suppress only the update_available popup.
+    if (!isNativeBlocking && pendingUpdateModal.kind === 'update_available' && muteUpdateNotifications) return;
+
+    const dismissed = dismissedUpdateModalByTab.get(tabId);
+    if (dismissed && dismissed.has(pendingUpdateModal.kind)) return;
 
     const maxAttempts = 40;
     const current = updateModalRetryByTab.get(tabId);
@@ -806,7 +838,12 @@ function scheduleTryShowUpdateModal(tabId, url) {
         }
 
         if (!pendingUpdateModal) return;
-        if (updateModalTargetTabId && tabId !== updateModalTargetTabId) return;
+
+        const dismissedNow = dismissedUpdateModalByTab.get(tabId);
+        if (dismissedNow && dismissedNow.has(pendingUpdateModal.kind)) {
+            updateModalRetryByTab.delete(tabId);
+            return;
+        }
 
         try {
             const tab = await browser.tabs.get(tabId);
@@ -821,11 +858,6 @@ function scheduleTryShowUpdateModal(tabId, url) {
         }
 
         await tryShowPendingUpdateModal(tabId, url);
-
-        if (!isNativeBlocking && updateModalTargetTabId === tabId) {
-            updateModalRetryByTab.delete(tabId);
-            return;
-        }
 
         state.attempts += 1;
         if (state.attempts >= maxAttempts) {
@@ -883,32 +915,43 @@ async function checkForNativeAppUpdate() {
 
     const remoteVersion = extractVersion(remoteText);
     if (!remoteVersion) return;
-    if (compareVersions(remoteVersion, localVersion) <= 0) {
+    const cmp = compareVersions(remoteVersion, localVersion);
+    if (cmp === 0) {
         updateAvailableStatus = null;
-        dismissedUpdateKey = null;
         clearPendingUpdateModal();
         return;
     }
 
-    const text = "The native App has an update. Download it on Github.";
+    const relation = cmp > 0 ? 'remote_newer' : 'remote_older';
+    const title = relation === 'remote_newer'
+        ? 'Newer App Version Available!'
+        : 'Older App Version Available!';
+    const text = relation === 'remote_newer'
+        ? 'A newer version of the native App is available. Download it on GitHub.'
+        : 'Your installed native App version is newer than the latest version this extension detected.';
 
     updateAvailableStatus = {
         kind: 'update_available',
+        relation,
         localVersion,
         remoteVersion,
         url: UPDATE_GITHUB_URL,
         downloadUrl: UPDATE_DOWNLOAD_URL
     };
 
-    const updateKey = `${localVersion}|${remoteVersion}`;
-    if (dismissedUpdateKey === updateKey) {
-        clearPendingUpdateModal();
+    // Respect mute setting for popups (banner still shows).
+    if (muteUpdateNotifications) {
+        // Keep pendingUpdateModal cleared so nothing gets shown.
+        if (pendingUpdateModal && pendingUpdateModal.kind === 'update_available') {
+            clearPendingUpdateModal();
+        }
         return;
     }
 
     pendingUpdateModal = {
         kind: 'update_available',
-        title: "App Update Available!",
+        relation,
+        title: title,
         text,
         localVersion,
         remoteVersion,
@@ -1031,15 +1074,22 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         return await getRpcDiagnostics();
     }
     if (msg.action === "UPDATE_MODAL_DISMISSED") {
-        if (msg.kind === 'native_missing' || msg.kind === 'native_invalid') {
-            updateModalTargetTabId = null;
-            updateModalRetryByTab.forEach(st => { if (st && st.timer) clearTimeout(st.timer); });
-            updateModalRetryByTab.clear();
-        } else {
-            if (updateAvailableStatus && updateAvailableStatus.localVersion && updateAvailableStatus.remoteVersion) {
-                dismissedUpdateKey = `${updateAvailableStatus.localVersion}|${updateAvailableStatus.remoteVersion}`;
-            }
-            clearPendingUpdateModal();
+        const kind = msg.kind ? String(msg.kind) : '';
+        const tabId = sender && sender.tab ? sender.tab.id : null;
+
+        if (tabId != null && kind) {
+            const set = dismissedUpdateModalByTab.get(tabId) || new Set();
+            set.add(kind);
+            dismissedUpdateModalByTab.set(tabId, set);
+
+            const st = updateModalRetryByTab.get(tabId);
+            if (st && st.timer) clearTimeout(st.timer);
+            updateModalRetryByTab.delete(tabId);
+        }
+
+        // Dismissal is per-tab; keep pendingUpdateModal so other tabs can still show it once.
+        if (kind === 'native_missing' || kind === 'native_invalid') {
+            if (updateModalTargetTabId === tabId) updateModalTargetTabId = null;
         }
         return;
     }
@@ -1063,7 +1113,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
                 action: "UPDATE_CUSTOM",
                 currentSite: "Custom",
                 payload: {},
-                settings: settings.rpcCustom
+                settings: normalizeDisabledActivityTypes(settings.rpcCustom)
             });
         } else {
             // Clear Custom RPC
@@ -1161,7 +1211,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
             currentSite: site,
             tabId: sender.tab ? sender.tab.id : null,
             isActiveTab: isActiveTab,
-            settings: msg.settings || {}
+            settings: normalizeDisabledActivityTypes(msg.settings || {})
         };
         port.postMessage(data);
         return;
@@ -1219,6 +1269,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     } else {
         activeSettings = msg.action === "VIDEO_PAUSED" ? settings.rpcYoutubeMusic.paused : settings.rpcYoutubeMusic.running;
     }
+    activeSettings = normalizeDisabledActivityTypes(activeSettings);
 
     const data = {
         ...msg,
@@ -1438,7 +1489,13 @@ browser.runtime.onStartup.addListener(() => {
 });
 
 browser.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== 'local' || !changes || !changes.rpcEnabled) return;
+    if (areaName !== 'local' || !changes) return;
+
+    if (changes.muteUpdateNotifications) {
+        muteUpdateNotifications = changes.muteUpdateNotifications.newValue === true;
+    }
+
+    if (!changes.rpcEnabled) return;
 
     const newValue = changes.rpcEnabled.newValue;
     if (newValue === false) {

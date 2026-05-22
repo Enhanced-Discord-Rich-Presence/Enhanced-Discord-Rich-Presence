@@ -165,6 +165,26 @@ header {
     line-height: 1.2;
 }
 
+.update-banner__mute {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.update-banner__mute-text {
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(209, 213, 219, 0.85);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.update-banner__mute-toggle {
+    width: 14px;
+    height: 14px;
+}
+
 .update-banner__link {
     border: 1px solid rgba(99, 102, 241, 0.35);
     background: rgba(99, 102, 241, 0.18);
@@ -639,6 +659,14 @@ input[type="text"]:focus {
 
 .warning-icon:hover {
     color: #ef4444;
+}
+
+.warning-icon--orange {
+    color: rgba(249, 115, 22, 0.75);
+}
+
+.warning-icon--orange:hover {
+    color: var(--orange-500);
 }
 
 .tooltip-box {

@@ -23,7 +23,16 @@
 
     <div id="update-banner" class="update-banner" style="display:none">
         <div class="update-banner__text">
-            <span class="update-banner__title">App update available</span>
+            <span id="update-banner-title" class="update-banner__title">App update available</span>
+            <div class="update-banner__mute">
+                <span class="update-banner__mute-text">Mute update notifications</span>
+                <label class="checkbox-container update-banner__mute-toggle" title="When enabled, update popups will not be shown (native missing will still show).">
+                    <input id="mute-update-notifications" type="checkbox">
+                    <div class="checkbox-custom">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    </div>
+                </label>
+            </div>
         </div>
         <button id="update-banner-link" class="update-banner__link" type="button">Download</button>
     </div>

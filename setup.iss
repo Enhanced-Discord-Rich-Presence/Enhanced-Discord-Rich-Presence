@@ -41,8 +41,8 @@ var
   FileDataAnsi: AnsiString;
   FileDataUnicode: String; 
 begin
-  ManifestPath := ExpandConstant('{localappdata}\Enhanced Discord RPC\app_manifest.json');
-  ExePath := ExpandConstant('{localappdata}\Enhanced Discord RPC\EnhancedRPC.exe');
+  ManifestPath := ExpandConstant('{app}\app_manifest.json');
+  ExePath := ExpandConstant('{app}\EnhancedRPC.exe');
   
   StringChangeEx(ExePath, '\', '\\', True);
 

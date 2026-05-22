@@ -6,15 +6,11 @@ __pycache__/
 # Build Artifacts
 App/dist/
 App/build/
-App/bridge_DEV.spec
-App/build.bat
-App/build_DEV.bat
 
 # Release Builds
 Releases/
 
 # Development
-setup.iss
 VERSIONING.md
 todo.txt
 changelog.txt

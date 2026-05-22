@@ -59,7 +59,7 @@ let state = {
             state: { text: '%author%', url: '%author_url%', urlEnabled: true },
             showCurrentTime: true,
             showLength: true,
-            largeImage: { enabled: true, text: '%title%', key: '%thumbnail%', url: '%url%', urlEnabled: true },
+            largeImage: { enabled: true, text: '', key: '%thumbnail%', url: '%url%', urlEnabled: true },
             smallImage: { enabled: true, text: '%author%', key: 'youtubemusic', url: '', urlEnabled: false },
             button1: { enabled: true, text: 'Listen Now', url: '%url%' },
             button2: { enabled: false, text: 'View Artist', url: '' },
@@ -187,6 +187,21 @@ function isValidUrl(str) {
     } catch {
         return false;
     }
+}
+
+function isAllowedPlaceholderValue(value, child) {
+    const text = String(value || '').trim();
+    if (!text) return false;
+
+    if (child === 'key') {
+        return text === '%thumbnail%' || text === '%author_avatar%';
+    }
+
+    if (child === 'url') {
+        return text === '%url%' || text === '%author_url%' || text === '%author_avatar%' || text === '%thumbnail%';
+    }
+
+    return false;
 }
 
 async function isImageUrl(url) {
@@ -329,15 +344,22 @@ function render() {
                     <div class="form-group">
                         <label class="label-small" style="display: flex; align-items: center;">Activity Type
                             <div class="tooltip-container" style="transform: translateY(2px);">
-                              <svg class="activity-icon" data-label="ActivityType" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                <line x1="12" y1="9" x2="12" y2="13"></line>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                              </svg>
+                                                            <svg class="info-icon" data-label="ActivityType" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <circle cx="12" cy="12" r="10"></circle>
+                                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                                            </svg>
                             </div>
+                                                        <div class="tooltip-container" style="transform: translateY(2px); margin-left: 4px; color: #9ca3af;">
+                                                            <svg class="activity-icon warning-icon--orange" data-label="PlayingDisabled" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                                            </svg>
+                                                        </div>
                         </label>
                         <select data-id="${id}" class="type-select">
-                            <option ${cfg.type === 'Playing' ? 'selected' : ''}>Playing</option>
+                                                        <option disabled ${cfg.type === 'Playing' ? 'selected' : ''}>Playing</option>
                             <option ${cfg.type === 'Listening' ? 'selected' : ''}>Listening</option>
                             <option ${cfg.type === 'Watching' ? 'selected' : ''}>Watching</option>
                             <option ${cfg.type === 'Competing' ? 'selected' : ''}>Competing</option>
@@ -795,9 +817,13 @@ function renderConfigRow(platformId, fieldKey, label, fieldCfg, isAsset) {
     const secondInputKey = isAsset ? 'key' : 'url';
     const secondIcon = isAsset ? SVGS['key'] : SVGS['link'];
     const warningSvg = `<svg class="warning-icon" data-label="AuthorURLWarning" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+    const listeningWarningSvg = `<svg class="warning-icon warning-icon--orange" data-label="ListeningLargeImageWarning" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+    const isListeningLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Listening';
     
     let textWarningIcon = '';
-    if (platformId === 'youtube' && fieldCfg.text.includes('%author_url%')) {
+    if (isListeningLargeImage) {
+        textWarningIcon = `<div class="tooltip-container">${listeningWarningSvg}</div>`;
+    } else if (platformId === 'youtube' && fieldCfg.text.includes('%author_url%')) {
         textWarningIcon = `<div class="tooltip-container">${warningSvg}</div>`;
     }
 
@@ -871,6 +897,9 @@ function showTooltip(icon) {
 
     const isCustomRPC = state.expandedSection === 'custom';
     const isYoutubeMusic = state.expandedSection === 'youtubeMusic';
+    const suppressDynamicTags = label === 'AuthorURLWarning'
+        || label === 'ListeningLargeImageWarning'
+        || label === 'PlayingDisabled';
 
     let tooltipContentHtml = '';
     if (label === 'Details') {
@@ -891,10 +920,22 @@ function showTooltip(icon) {
             <p class="tooltip-text">If you select Playing, it will be hidden if another application with a "Playing" status is also running.<br><br>The others will always show.</p>
             <div class="tooltip-divider"></div>
         `;
+    } else if (label === 'PlayingDisabled') {
+        tooltipContentHtml += `
+            <div class="tooltip-header">Playing Disabled</div>
+            <p class="tooltip-text">Playing is currently disabled due to issues.</p>
+            <div class="tooltip-divider"></div>
+        `;
     } else if (label === 'AuthorURLWarning') {
         tooltipContentHtml += `
             <div class="tooltip-header">Potential Issue</div>
             <p class="tooltip-text">'%author_url%' will be empty if the Video has multiple Channels.. There's no way to get around this currently.<br><br>If this happens, it will just leave it blank.</p>
+            <div class="tooltip-divider"></div>
+        `;
+    } else if (label === 'ListeningLargeImageWarning') {
+        tooltipContentHtml += `
+            <div class="tooltip-header">Listening Mode</div>
+            <p class="tooltip-text">If you want to remove or add a text below your state, you must either leave this text empty or set it.</p>
             <div class="tooltip-divider"></div>
         `;
     } else if (label === 'ImageFieldsInfo') {
@@ -912,7 +953,7 @@ function showTooltip(icon) {
         `;
     }
 
-    if (!isCustomRPC) {
+    if (!isCustomRPC && !suppressDynamicTags) {
         tooltipContentHtml += `
             <div class="tooltip-header">Dynamic Tags</div>
             <div class="tags-container">
@@ -1128,12 +1169,17 @@ function attachListeners() {
                 const isEnabled = config.enabled !== undefined ? config.enabled : true;
                 
                 if (child === "text") {
-                    // Details and State are always required (2-128 bytes)
                     if (parent === "details" || parent === "state") {
                         validation = validateField(currentVal, 2, 128, true);
                     }
-                    // Image/Button labels required only if enabled (2-128 bytes)
-                    else if (parent === "largeImage" || parent === "smallImage" || parent === "button1" || parent === "button2") {
+                    // Image/Button labels are optional; either 0 or 2-128 chars if enabled
+                    else if (parent === "largeImage") {
+                        validation = validateField(currentVal, 2, 128, false);
+                    }
+                    else if (parent === "smallImage") {
+                        validation = validateField(currentVal, 2, 128, false);
+                    }
+                    else if (parent === "button1" || parent === "button2") {
                         validation = validateField(currentVal, 2, 128, isEnabled);
                     }
                 }
@@ -1141,10 +1187,10 @@ function attachListeners() {
                     // Image keys (URLs to images) - validate as image URL (up to 512 bytes)
                     if (currentVal && currentVal.trim() !== '') {
                         validation = validateField(currentVal, 0, 512, false);
-                        if (validation.valid && !isValidUrl(currentVal)) {
+                        if (validation.valid && !isAllowedPlaceholderValue(currentVal, child) && !isValidUrl(currentVal)) {
                             validation = { valid: false, error: 'Invalid URL format' };
                         }
-                        if (validation.valid) {
+                        if (validation.valid && !isAllowedPlaceholderValue(currentVal, child)) {
                             const isImage = await isImageUrl(currentVal);
                             if (!isImage) {
                                 validation = { valid: false, error: 'URL must point to an image' };
@@ -1160,7 +1206,7 @@ function attachListeners() {
                             maxBytes = 256; // Details/State URLs limited to 256
                         }
                         validation = validateField(currentVal, 0, maxBytes, false);
-                        if (validation.valid && !isValidUrl(currentVal)) {
+                        if (validation.valid && !isAllowedPlaceholderValue(currentVal, child) && !isValidUrl(currentVal)) {
                             validation = { valid: false, error: 'Invalid URL format' };
                         }
                     }
@@ -1560,7 +1606,7 @@ async function handleToastTrigger() {
                     details_url: config.details.url,
                     state: config.state.text,
                     state_url: config.state.url,
-                    large_image_text: config.largeImage.text,
+                    ...(config.largeImage.text ? { large_image_text: config.largeImage.text } : {}),
                     large_image_url: config.largeImage.key, 
                     small_image_text: config.smallImage.text,
                     small_image_url: config.smallImage.key,
@@ -1731,7 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function mapStorageToState(storageConfig, uiConfig) {
-    const typeMap = { 0: 'Playing', 2: 'Listening', 3: 'Watching', 5: 'Competing' };
+    const typeMap = { 0: 'Watching', 2: 'Listening', 3: 'Watching', 5: 'Competing' };
 
     if (!storageConfig || !uiConfig) return;
 
@@ -1837,6 +1883,8 @@ function mapStorageToState(storageConfig, uiConfig) {
 async function refreshUpdateBanner() {
     const banner = document.getElementById('update-banner');
     const linkBtn = document.getElementById('update-banner-link');
+    const titleEl = document.getElementById('update-banner-title');
+    const muteToggle = document.getElementById('mute-update-notifications');
     if (!banner || !linkBtn) return;
 
     try {
@@ -1844,6 +1892,28 @@ async function refreshUpdateBanner() {
         if (!status || status.kind !== 'update_available') {
             banner.style.display = 'none';
             return;
+        }
+
+        if (titleEl) {
+            const relation = status.relation;
+            titleEl.textContent = relation === 'remote_older'
+                ? 'Older version available'
+                : 'Newer version available';
+        }
+
+        if (muteToggle) {
+            try {
+                const st = await browser.storage.local.get('muteUpdateNotifications');
+                muteToggle.checked = st.muteUpdateNotifications === true;
+            } catch {
+                muteToggle.checked = false;
+            }
+
+            muteToggle.onchange = async () => {
+                try {
+                    await browser.storage.local.set({ muteUpdateNotifications: !!muteToggle.checked });
+                } catch { }
+            };
         }
 
         const url = status.downloadUrl || status.url;
