@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Enhanced Discord Rich Presence",
   "version": "1.4.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAquYViqCNgOUqTsNl/Y94SQKU99H7UiBNFhmG1RLcj/cwH+zBwhKS/qd98veZR4q0GJLMkTi/8j0rechjeFCBhwMssP7uDD97+SjYcLCw0LO4ilbbZ0gDJTf5TVxqeXO+SdylYrH99BzUPc3G5Z54F5nYt91GEencvaa8/j4FDfUqiNuViaYs9dHt8V2a9M//8DmHcJcMimEIXc/QfyF7W5HNIrNfw54nwumVl+UOUW8ZtdlGjw3bJ0MYqH1q70FfTjr2PeHGgSDat9B3DlEP0nqsTcIZDicjCbRPUuFpD9HXZNTFicKoCIalQT5d1RkvaKnF5di/fOxqqxXsh+O1OwIDAQAB",
   "icons": {
     "48": "src/icons/icon.png",
     "96": "src/icons/icon.png"
