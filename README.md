@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Extension-v1.4.0-orange"/>
-  <img src="https://img.shields.io/badge/Native-v1.3.0-orange"/>
+  <img src="https://img.shields.io/badge/Native-v1.5.0-orange"/>
 </p>
 
 <p align="center">
