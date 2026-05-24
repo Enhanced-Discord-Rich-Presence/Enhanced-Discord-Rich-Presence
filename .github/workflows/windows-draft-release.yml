@@ -106,8 +106,9 @@ jobs:
         with:
           draft: true
           target_commitish: new-release-workflow # need to change to main once I merge it
-          name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
           tag_name: ${{ github.ref_name }}
+          name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
           body_path: changelog.txt
           generate_release_notes: true
+          append_body: true
           files: Releases/EnhancedRPC-*-windows-setup.exe
