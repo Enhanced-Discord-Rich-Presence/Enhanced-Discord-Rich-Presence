@@ -109,17 +109,28 @@ jobs:
             $changelogPath = Join-Path $env:GITHUB_WORKSPACE "CHANGELOG.md"
 
             if (Test-Path $changelogPath) {
-                $changelog = Get-Content $changelogPath -Raw
+                $lines = Get-Content $changelogPath
             } else {
-                $changelog = "No changelog available."
+                $lines = @("# Changelog", "", "No changelog available.")
             }
 
-            $releaseNotes = "$releaseHeader`n`n$changelog"
+            if ($lines.Count -gt 0 -and $lines[0] -match "^# Changelog") {
+                $releaseNotesArray = @()
+                $releaseNotesArray += $lines[0]
+                $releaseNotesArray += ""
+                $releaseNotesArray += $releaseHeader
+                $releaseNotesArray += $lines[1..($lines.Count - 1)]
+            } else {
+                $releaseNotesArray = @($releaseHeader, "", $lines)
+            }
+
+            $releaseNotesText = $releaseNotesArray -join "`n"
 
             "VERSION=$version" >> $env:GITHUB_ENV
             "RELEASE_DATE=$currentDate" >> $env:GITHUB_ENV
+
             "RELEASE_NOTES<<EOF" >> $env:GITHUB_ENV
-            $releaseNotes >> $env:GITHUB_ENV
+            $releaseNotesText >> $env:GITHUB_ENV
             "EOF" >> $env:GITHUB_ENV
 
       - name: Create draft GitHub release
