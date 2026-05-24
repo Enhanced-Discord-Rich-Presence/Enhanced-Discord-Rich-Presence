@@ -89,7 +89,7 @@ jobs:
       - name: Compile Inno Setup installer
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
         with:
-          path: installer.iss
+          path: setup.iss
 
 
       - name: Create draft GitHub release
