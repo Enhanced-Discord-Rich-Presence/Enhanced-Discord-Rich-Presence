@@ -8,3 +8,4 @@
 ### Changed
 - moved `Discord_IPC.md` to `docs/`.
 - swapped (previously hidden) `changelog.txt` into (public) `CHANGELOG.md`.
+- adjusted `.gitignore` to have some IDE things
