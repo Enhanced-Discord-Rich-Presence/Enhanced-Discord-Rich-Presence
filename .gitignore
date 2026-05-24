@@ -21,3 +21,6 @@ Releases/
 # Development
 docs/todo.txt
 docs/RELEASE.md
+Extension/Extension_Chrome.zip
+Extension/Extension_Firefox.zip
+Extension/package.bat
