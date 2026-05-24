@@ -103,7 +103,7 @@ jobs:
           $version = "${{ github.ref_name }}" -replace "^v", ""
           $currentDate = Get-Date -Format "dd.MM.yyyy"
 
-          $changelogPath = "App/dist/changelog.txt"
+          $changelogPath = "changelog.txt"
           if (Test-Path $changelogPath) {
             $changelog = Get-Content $changelogPath -Raw
           } else {
