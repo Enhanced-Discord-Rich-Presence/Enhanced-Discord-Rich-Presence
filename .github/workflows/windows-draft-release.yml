@@ -103,7 +103,9 @@ jobs:
             $version = "${{ github.ref_name }}" -replace "^v", ""
             $currentDate = Get-Date -Format "dd.MM.yyyy"
 
-            $changelogPath = Join-Path $env:GITHUB_WORKSPACE "changelog.txt"
+            $releaseHeader = "## [v$version] - $currentDate"
+
+            $changelogPath = Join-Path $env:GITHUB_WORKSPACE "CHANGELOG.md"
 
             if (Test-Path $changelogPath) {
                 $changelog = Get-Content $changelogPath -Raw
@@ -113,6 +115,7 @@ jobs:
 
             "VERSION=$version" >> $env:GITHUB_ENV
             "RELEASE_DATE=$currentDate" >> $env:GITHUB_ENV
+            "RELEASE_HEADER=$releaseHeader" >> $env:GITHUB_ENV
 
             "CHANGELOG<<EOF" >> $env:GITHUB_ENV
             $changelog >> $env:GITHUB_ENV
