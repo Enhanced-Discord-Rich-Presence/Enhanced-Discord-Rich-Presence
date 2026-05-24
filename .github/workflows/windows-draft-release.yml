@@ -5,6 +5,11 @@ on:
     tags:
       - 'v*'
 
+env:
+  VERSION: ''
+  RELEASE_DATE: ''
+  CHANGELOG: ''
+
 permissions:
   contents: write
 
@@ -92,14 +97,22 @@ jobs:
           path: setup.iss
 
 
-      - name: Get version and date
+      - name: Get version, date and changelog for release notes
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}" -replace "^v", ""
           $currentDate = Get-Date -Format "dd.MM.yyyy"
+
+          $changelogPath = "App/dist/changelog.txt"
+          if (Test-Path $changelogPath) {
+            $changelog = Get-Content $changelogPath -Raw
+          } else {
+            $changelog = "No changelog available."
+          }
           
           echo "VERSION=$version" >> $env:GITHUB_ENV
           echo "RELEASE_DATE=$currentDate" >> $env:GITHUB_ENV
+          echo "CHANGELOG=$changelog" >> $env:GITHUB_ENV
 
       - name: Create draft GitHub release
         uses: softprops/action-gh-release@v2
@@ -110,10 +123,7 @@ jobs:
 
           name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
 
-          body: |
-            # Release Notes
-
-            This is a test release note
+          body: ${{ env.CHANGELOG }}
 
           generate_release_notes: true
           append_body: true
