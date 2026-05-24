@@ -1,34 +1,3 @@
-<div align="center" style="margin: 20px 0; font-family: 'Segoe UI', Roboto;">
-  
-  <div style="
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #ffffff;
-    padding: 8px 16px;
-    border-radius: 100px;
-    font-size: 13px;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  ">
-    <span>Chromium + Linux + macOS Support</span>
-    <span style="
-      background: rgba(255, 255, 255, 0.2);
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 500;
-    ">Soon™</span>
-  </div>
-
-  <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
-    Chrome &bull; Edge &bull; Opera/GX &bull; Brave &bull; Vivaldi &bull; Linux &bull; macOS
-  </div>
-
-</div>
-<!-- :3 -->
-
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/aqusorias)
 <p align="center"><img src="Extension/src/icons/icon.png" width="128" alt="MAS Logo"></p>
 
