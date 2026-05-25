@@ -3,7 +3,6 @@ import json
 import os
 import struct
 import time
-import glob
 
 if sys.platform.startswith("win"):
     platform = "windows"
@@ -49,19 +48,6 @@ class MultiServiceBridge:
         self.tab_to_service = {}       # tabId -> service
         self.last_payload_by_tab = {}  # tabId -> {message_data}
         self.selected_tab = {}         # service -> tabId
-        self.ipc_debug = {}            # service -> debug info about discord ipc
-
-    def _set_ipc_debug(self, service_type, **kwargs):
-        try:
-            current = self.ipc_debug.get(service_type)
-            if not isinstance(current, dict):
-                current = {}
-            current.update(kwargs)
-            current["updated_at"] = int(time.time())
-            current["platform"] = platform
-            self.ipc_debug[service_type] = current
-        except Exception:
-            pass
 
     def _invalidate_pipe(self, service_type):
         pipe = self.pipes.pop(service_type, None)
@@ -93,7 +79,6 @@ class MultiServiceBridge:
         for i in range(10):
             try:
                 pipe_name = rf"\\.\pipe\discord-ipc-{i}"
-                self._set_ipc_debug(service_type, last_attempt=pipe_name)
                 pipe = win32file.CreateFile(
                     pipe_name,
                     win32file.GENERIC_READ | win32file.GENERIC_WRITE,
@@ -113,131 +98,54 @@ class MultiServiceBridge:
                 time.sleep(1)
                 
                 self.pipes[service_type] = pipe
-                self._set_ipc_debug(service_type, connected=True, connected_to=pipe_name, last_error="")
                 return pipe
             except Exception:
-                try:
-                    self._set_ipc_debug(service_type, connected=False, last_error="IPC connect failed")
-                except Exception:
-                    pass
                 continue
         return None
     
     def _get_pipe_unix(self, service_type, client_id):
-        def _recv_exact(sock_obj, length):
-            data = b""
-            while len(data) < length:
-                chunk = sock_obj.recv(length - len(data))
-                if not chunk:
-                    raise ConnectionError("Socket closed")
-                data += chunk
-            return data
-
-        def _handshake_and_validate(sock_obj):
-            if not self._send_frame(sock_obj, 0, {"v": 1, "client_id": client_id}, service_type=service_type):
-                return False
-
-            header = _recv_exact(sock_obj, 8)
-            op, length = struct.unpack("<II", header)
-            payload_raw = _recv_exact(sock_obj, length) if length > 0 else b"{}"
-            try:
-                payload_obj = json.loads(payload_raw.decode("utf-8"))
-            except Exception:
-                payload_obj = {}
-
-            return op == 1 and payload_obj.get("evt") == "READY"
-
         base_dirs = []
         for env in ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"]:
-            val = os.environ.get(env)
-            if val:
-                base_dirs.append(val)
-
-        if platform == "linux":
-            try:
-                base_dirs.append(f"/run/user/{os.getuid()}")
-            except Exception:
-                pass
-
+            if os.environ.get(env):
+                base_dirs.append(os.environ[env])
+    
         base_dirs.append("/tmp")
 
-        seen = set()
-        attempted = []
-        last_error = ""
         for base in base_dirs:
-            if not base or base in seen:
-                continue
-            seen.add(base)
-
             for i in range(10):
-                candidates = []
-
-                candidates.append(os.path.join(base, f"discord-ipc-{i}"))
-
-                if base != "/tmp":
-                    candidates.extend(glob.glob(os.path.join(base, "app", "*", f"discord-ipc-{i}")))
-                    candidates.extend(glob.glob(os.path.join(base, "snap.*", f"discord-ipc-{i}")))
-                    candidates.extend(glob.glob(os.path.join(base, "snap", "*", f"discord-ipc-{i}")))
-
-                if platform == "linux":
-                    candidates.append("\0" + f"discord-ipc-{i}")
-
-                for addr in candidates:
-                    if addr in seen:
-                        continue
-                    seen.add(addr)
-
-                    try:
-                        display_addr = f"abstract:{addr[1:]}" if isinstance(addr, str) and addr.startswith("\0") else str(addr)
-                        attempted.append(display_addr)
-                        if len(attempted) > 40:
-                            attempted = attempted[-40:]
-                    except Exception:
-                        pass
-
-                    self._set_ipc_debug(service_type, connected=False, last_attempt=(attempted[-1] if attempted else ""), attempted=attempted)
-
-                    if isinstance(addr, str) and not addr.startswith("\0"):
+                path = os.path.join(base, f"discord-ipc-{i}")
+                
+                if not os.path.exists(path):
+                    continue
+                
+                try:
+                    # Flushing the buffer so we can read it without blocking
+                    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    sock.settimeout(2.0)
+                    sock.connect(path)
+                    
+                    if not self._send_frame(sock, 0, {"v": 1, "client_id": client_id}, service_type=service_type):
                         try:
-                            if not os.path.exists(addr):
-                                continue
-                        except Exception:
-                            continue
-
-                    sock = None
-                    try:
-                        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                        sock.settimeout(2.0)
-                        sock.connect(addr)
-
-                        if not _handshake_and_validate(sock):
-                            last_error = "Handshake failed (no READY)"
-                            self._set_ipc_debug(service_type, connected=False, last_error=last_error, attempted=attempted)
-                            try:
-                                sock.close()
-                            except Exception:
-                                pass
-                            continue
-
-                        sock.settimeout(None)
-                        self.pipes[service_type] = sock
-                        self._set_ipc_debug(service_type, connected=True, connected_to=(attempted[-1] if attempted else ""), last_error="", attempted=attempted)
-                        return sock
-                    except Exception as e:
-                        try:
-                            last_error = f"{type(e).__name__}: {e}"
-                        except Exception:
-                            last_error = "IPC connect failed"
-                        self._set_ipc_debug(service_type, connected=False, last_error=last_error, attempted=attempted)
-                        try:
-                            if sock:
-                                sock.close()
+                            sock.close()
                         except Exception:
                             pass
                         continue
-
-        if attempted:
-            self._set_ipc_debug(service_type, connected=False, last_error=(last_error or "Discord IPC socket not found"), attempted=attempted)
+                    
+                    try:
+                        header = sock.recv(8)
+                        if len(header) == 8:
+                            _, length = struct.unpack("<II", header)
+                            if length > 0:
+                                sock.recv(length)
+                    except Exception:
+                        pass
+                    
+                    sock.settimeout(None)
+                    
+                    self.pipes[service_type] = sock
+                    return sock
+                except Exception:
+                    continue
         return None
     
     def _send_frame(self, pipe, op, payload, service_type=None):
@@ -252,12 +160,7 @@ class MultiServiceBridge:
                 case "linux" | "macos":
                     pipe.sendall(header + data)
             return True
-        except Exception as e:
-            if service_type:
-                try:
-                    self._set_ipc_debug(service_type, last_send_error=f"{type(e).__name__}: {e}")
-                except Exception:
-                    pass
+        except Exception:
             if service_type:
                 self._invalidate_pipe(service_type)
             return False
@@ -675,10 +578,7 @@ def main():
                     "action": "STATUS_RESPONSE",
                     "active_services": list(bridge.pipes.keys()),
                     "selected_tabs": bridge.selected_tab,
-                    "rpc_data": bridge.last_payload_by_tab,
-                    "ipc_debug": bridge.ipc_debug,
-                    "platform": platform,
-                    "pid": os.getpid(),
+                    "rpc_data": bridge.last_payload_by_tab 
                 })
 
             elif action == "GET_VERSION":

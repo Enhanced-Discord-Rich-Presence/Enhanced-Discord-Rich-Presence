@@ -70,6 +70,7 @@ Designed for quick access without descriptions.
 - **Browser:** Firefox
 - **Discord:** Stable, Canary, or PTB
 
+> Discord can't be installed via Snap or any other system that install Discord in a sandbox
 
 ## 🚀 Installation
 
