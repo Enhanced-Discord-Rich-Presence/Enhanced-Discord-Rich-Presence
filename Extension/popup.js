@@ -818,11 +818,10 @@ function renderConfigRow(platformId, fieldKey, label, fieldCfg, isAsset) {
     const secondIcon = isAsset ? SVGS['key'] : SVGS['link'];
     const warningSvg = `<svg class="warning-icon" data-label="AuthorURLWarning" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
     const listeningWarningSvg = `<svg class="warning-icon warning-icon--orange" data-label="ListeningLargeImageWarning" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-    const isListeningLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Listening'
-    const isCompetingLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Competing'
+    const isListeningLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Listening';
     
     let textWarningIcon = '';
-    if (isListeningLargeImage || isCompetingLargeImage) {
+    if (isListeningLargeImage) {
         textWarningIcon = `<div class="tooltip-container">${listeningWarningSvg}</div>`;
     } else if (platformId === 'youtube' && fieldCfg.text.includes('%author_url%')) {
         textWarningIcon = `<div class="tooltip-container">${warningSvg}</div>`;
@@ -935,7 +934,7 @@ function showTooltip(icon) {
         `;
     } else if (label === 'ListeningLargeImageWarning') {
         tooltipContentHtml += `
-            <div class="tooltip-header">Listening/Competing Mode</div>
+            <div class="tooltip-header">Listening Mode</div>
             <p class="tooltip-text">If you want to remove or add a text below your state, you must either leave this text empty or set it.</p>
             <div class="tooltip-divider"></div>
         `;
