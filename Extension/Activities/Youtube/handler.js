@@ -149,7 +149,7 @@ async function checkBrowsingActivity() {
     }
 }
 
-async function sendToBackground(action) {
+function sendToBackground(action) {
     if (!isVideoPage()) return;
 
     const title = getCleanTitle();
@@ -163,7 +163,8 @@ async function sendToBackground(action) {
 
     const video = document.querySelector('video');
     const currentUrl = window.location.href;
-    const thumbnail = await getVideoThumbnail(currentUrl);
+    const ogMeta = document.querySelector('meta[property="og:image"]');
+    const thumbnail = (ogMeta && ogMeta.content) ? ogMeta.content : "youtube";
 
     const payload = {
         url: currentUrl,
@@ -173,7 +174,7 @@ async function sendToBackground(action) {
         author_avatar: authorData.avatar,
         thumbnail,
         time: video ? video.currentTime : 0,
-        duration: video ? video.duration : 0,
+        duration: (video && isFinite(video.duration) && video.duration > 0) ? video.duration : 0,
         timestamp: new Date().toISOString()
     };
 
@@ -229,12 +230,13 @@ function scheduleThumbnailUpgradeSync(action, payload) {
             author_avatar: getAuthorData().avatar || payload.author_avatar,
             thumbnail: bestThumbnail,
             time: video ? video.currentTime : payload.time,
-            duration: video ? video.duration : payload.duration,
+            duration: (video && isFinite(video.duration) && video.duration > 0) ? video.duration : payload.duration,
             timestamp: new Date().toISOString()
         };
 
         lastSentThumbnail = bestThumbnail;
-        browser.runtime.sendMessage({ action, payload: currentPayload });
+        const currentAction = video && video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED"; // keep track of paused state so RPC doesn't show misleading info
+        browser.runtime.sendMessage({ action: currentAction, payload: currentPayload });
     }, delayMs));
 
     pendingThumbnailRefreshTimers.set(videoId, timers);
@@ -273,12 +275,26 @@ function attachListeners() {
         videoElement = video;
         video.dataset.lastSrc = video.currentSrc;
 
-        const triggerSync = () => sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
+        if (video._rpcPlayHandler) video.removeEventListener('play', video._rpcPlayHandler);
+        if (video._rpcPauseHandler) video.removeEventListener('pause', video._rpcPauseHandler);
+        if (video._rpcSeekedHandler) video.removeEventListener('seeked', video._rpcSeekedHandler);
+        if (video._rpcMetadataHandler) video.removeEventListener('loadedmetadata', video._rpcMetadataHandler);
 
-        video.removeEventListener('play', triggerSync);
-        video.removeEventListener('pause', triggerSync);
-        video.addEventListener('play', triggerSync);
-        video.addEventListener('pause', () => { if (!video.seeking) triggerSync(); });
+        const triggerSync = () => sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
+        let debounceTimer = null;
+        const debouncedTriggerSync = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => triggerSync(), 150);
+        };
+        const pauseHandler = () => { if (!video.seeking) debouncedTriggerSync(); };
+
+        video._rpcPlayHandler = debouncedTriggerSync;
+        video._rpcPauseHandler = pauseHandler;
+        video._rpcSeekedHandler = triggerSync;
+        video._rpcMetadataHandler = triggerSync;
+
+        video.addEventListener('play', debouncedTriggerSync);
+        video.addEventListener('pause', pauseHandler);
         video.addEventListener('seeked', triggerSync);
         video.addEventListener('loadedmetadata', triggerSync);
 
@@ -345,11 +361,24 @@ async function handleNavigation() {
 
     if (!isVideoPage()) {
         checkBrowsingActivity();
+        return;
     }
 
     if (navigationPollInterval) clearInterval(navigationPollInterval);
+
+    // Attach listeners immediately so the loadedmetadata event can fire the first send
+    attachListeners();
+
+    // If metadata is already available, send immediately without waiting for a poll tick
+    const video = document.querySelector('video');
+    if (video && video.readyState >= 1 && getCleanTitle()) {
+        sendToBackground(video.paused ? "VIDEO_PAUSED" : "VIDEO_RESUMED");
+        return;
+    }
+
+    // Fall back to a rapid poll for when the page isn't ready yet
     let attempts = 0;
-    navigationPollInterval = setInterval(async () => {
+    navigationPollInterval = setInterval(() => {
         if (!isVideoPage()) {
             clearInterval(navigationPollInterval);
             navigationPollInterval = null;
@@ -367,7 +396,7 @@ async function handleNavigation() {
             navigationPollInterval = null;
         }
         attempts++;
-    }, 200);
+    }, 50);
 }
 
 document.addEventListener('yt-navigate-finish', handleNavigation);
@@ -390,13 +419,13 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// Check for video activity every 2 seconds
 setInterval(() => {
     if (isVideoPage()) {
-        attachListeners();
+        const video = document.querySelector('video');
+        if (video && !video._rpcPlayHandler) attachListeners();
         checkMetadataConsistency();
     }
-}, 2000);
+}, 100);
 
 // Check for browsing activity every 1 second
 if (browsingActivityCheckInterval) clearInterval(browsingActivityCheckInterval);

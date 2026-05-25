@@ -308,7 +308,8 @@ class MultiServiceBridge:
                 
                 if end_val is not None and end_val is not False:
                     if isinstance(end_val, bool):
-                        timestamps["end"] = int(now + (total_duration - current_time))
+                        if total_duration > 0:
+                            timestamps["end"] = int(now + (total_duration - current_time))
                     elif isinstance(end_val, (int, float)):
                         timestamps["end"] = int(end_val)
             else:
@@ -552,7 +553,11 @@ def main():
                                     bridge._render_rpc(last_msg)
                                     continue
                             
-                            active_cfg = youtube_settings.get("running", {})
+                            last_action = last_msg.get("action")
+                            if last_action == "VIDEO_PAUSED":
+                                active_cfg = youtube_settings.get("paused", {})
+                            else:
+                                active_cfg = youtube_settings.get("running", {})
                         last_msg["settings"] = active_cfg
                         bridge._render_rpc(last_msg)
 

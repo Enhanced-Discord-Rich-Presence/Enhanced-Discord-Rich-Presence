@@ -1949,7 +1949,7 @@ function warmupVersionInfo() {
 }
 
 function currentSectionMapping() {
-    mapping = {
+    const mapping = {
         youtube: "rpcYoutube",
         youtubeMusic: "rpcYoutubeMusic",
         custom: "rpcCustom"

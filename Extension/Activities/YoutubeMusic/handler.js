@@ -21,6 +21,8 @@ let cachedInformationPopups = null;
 let cachedRpcYoutubeMusic = null;
 let playingTabHealthCheckInFlight = false;
 
+let playPauseDebounceTimer = null;
+
 async function refreshCachedSettings() {
 	try {
 		const { informationPopups, rpcYoutubeMusic } = await browser.storage.local.get(["informationPopups", "rpcYoutubeMusic"]);
@@ -182,7 +184,7 @@ async function checkBrowsingActivity() {
 	}
 }
 
-async function sendToBackground(action, isNewTrack = false) {
+async function sendToBackground(action) {
 	const queueItem = getQueueItem();
 	if (!queueItem) return;
 
@@ -194,6 +196,8 @@ async function sendToBackground(action, isNewTrack = false) {
 	const thumbnail = getThumbnailUrl() || "youtubemusic";
 	const currentTrackKey = getStableTrackKey();
 
+	const isNewTrack = currentTrackKey !== lastSentTrackKey;
+
 	const payload = {
 		url: currentUrl,
 		title,
@@ -201,8 +205,8 @@ async function sendToBackground(action, isNewTrack = false) {
 		author_url: authorData.url || "",
 		author_avatar: "youtubemusic",
 		thumbnail,
-		time: isNewTrack ? 0 : getCurrentTime(),
-		duration: isNewTrack ? getDuration() : getDuration(),
+		time: getCurrentTime(),
+		duration: isNewTrack ? 0 : getDuration(),
 		timestamp: new Date().toISOString(),
 	};
 
@@ -235,25 +239,20 @@ async function checkMetadataConsistency() {
 	const currentThumbnail = getThumbnailUrl();
 	const authorData = getAuthorData();
     const currentTrackKey = getStableTrackKey();
-	const currentTime = getCurrentTime();
-
 	const titleChanged = currentTitle !== lastSentTitle;
 	const urlChanged = currentUrl !== lastSentUrl;
 	const thumbnailChanged = (currentThumbnail || "") !== (lastSentThumbnail || "");
 	const authorChanged = (authorData.name || "") !== (lastSentAuthor || "") || (authorData.url || "") !== (lastSentAuthorUrl || "");
-	const timeChanged = Math.abs(currentTime - lastSentTime) > 3;
 
-	
 	const currentlyPlaying = isMusicCurrentlyPlaying();
 	const playStateChanged = lastSentPlaying !== null && currentlyPlaying !== lastSentPlaying;
 
-	
 	const isNewTrack = currentTrackKey !== lastSentTrackKey;
-	const hasSignificantChange = isNewTrack || playStateChanged || authorChanged || titleChanged || urlChanged || thumbnailChanged || (timeChanged && !isNewTrack);
+	const hasSignificantChange = isNewTrack || playStateChanged || authorChanged || titleChanged || urlChanged || thumbnailChanged;
 	const isDataValid = !!currentTitle;
 
 	if (hasSignificantChange && isDataValid) {
-		sendToBackground(currentlyPlaying ? "VIDEO_RESUMED" : "VIDEO_PAUSED", isNewTrack);
+		sendToBackground(currentlyPlaying ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
 
 		
 		if (informationPopups && isNewTrack) {
@@ -306,38 +305,55 @@ function setupVideoEventListeners() {
 	const video = document.querySelector('video');
 	if (!video) return;
 
-	// Remove existing listeners if any to avoid duplicates
 	if (video._ytmusicSeekHandler) {
 		video.removeEventListener('seeked', video._ytmusicSeekHandler);
 	}
 	if (video._ytmusicTimeUpdateHandler) {
 		video.removeEventListener('timeupdate', video._ytmusicTimeUpdateHandler);
+		delete video._ytmusicTimeUpdateHandler;
+	}
+	if (video._ytmusicMetadataHandler) {
+		video.removeEventListener('loadedmetadata', video._ytmusicMetadataHandler);
+	}
+	if (video._ytmusicPlayHandler) {
+		video.removeEventListener('play', video._ytmusicPlayHandler);
+	}
+	if (video._ytmusicPauseHandler) {
+		video.removeEventListener('pause', video._ytmusicPauseHandler);
 	}
 
-	// Handle seeking - immediately update time
 	const seekHandler = () => {
 		const queueItem = getQueueItem();
 		if (queueItem && lastSentPlaying !== null) {
-			checkMetadataConsistency();
+			sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
 		}
 	};
 	video._ytmusicSeekHandler = seekHandler;
 	video.addEventListener('seeked', seekHandler);
 
-	// Handle time updates - throttled to avoid excessive updates
-	let lastTimeUpdate = 0;
-	const timeUpdateHandler = () => {
-		const now = Date.now();
-		if (now - lastTimeUpdate > 5000) { // Only update every 5 seconds
-			lastTimeUpdate = now;
-			const queueItem = getQueueItem();
-			if (queueItem && lastSentPlaying !== null) {
-				checkMetadataConsistency();
-			}
+	// Re-send once metadata loads so the correct duration replaces any zeroed placeholder
+	const metadataHandler = () => {
+		if (getQueueItem() && getCleanTitle()) {
+			sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
 		}
 	};
-	video._ytmusicTimeUpdateHandler = timeUpdateHandler;
-	video.addEventListener('timeupdate', timeUpdateHandler);
+	video._ytmusicMetadataHandler = metadataHandler;
+	video.addEventListener('loadedmetadata', metadataHandler);
+
+	// Debounced play/pause so rapid toggling resolves to the final state
+	const debouncedPlayPause = () => {
+		clearTimeout(playPauseDebounceTimer);
+		playPauseDebounceTimer = setTimeout(() => {
+			if (getQueueItem() && getCleanTitle()) {
+				sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
+			}
+		}, 150);
+	};
+	const pauseHandler = () => { if (!video.seeking) debouncedPlayPause(); };
+	video._ytmusicPlayHandler = debouncedPlayPause;
+	video._ytmusicPauseHandler = pauseHandler;
+	video.addEventListener('play', debouncedPlayPause);
+	video.addEventListener('pause', pauseHandler);
 }
 
 async function handleNavigation() {
@@ -356,9 +372,17 @@ async function handleNavigation() {
 	setupVideoEventListeners();
 	checkBrowsingActivity();
 
-	
+	// Try immediate send if the track data is already in the DOM
+	const queueItem = getQueueItem();
+	const title = queueItem ? getCleanTitle() : null;
+	if (title && queueItem) {
+		sendToBackground(isMusicCurrentlyPlaying() ? "VIDEO_RESUMED" : "VIDEO_PAUSED");
+		return;
+	}
+
+	// Fall back to a rapid poll until the track data is ready
 	let attempts = 0;
-	const checkMetadata = setInterval(async () => {
+	const checkMetadata = setInterval(() => {
 		const queueItem = getQueueItem();
 		const title = queueItem ? getCleanTitle() : null;
 
@@ -367,7 +391,7 @@ async function handleNavigation() {
 			clearInterval(checkMetadata);
 		}
 		attempts++;
-	}, 200);
+	}, 50);
 }
 
 document.addEventListener('yt-navigate-finish', handleNavigation);
@@ -384,14 +408,13 @@ document.addEventListener("visibilitychange", () => {
 	setupVideoEventListeners();
 });
 
-// Check for track activity every 2 seconds
 setInterval(() => {
 	if (getQueueItem()) {
+		const video = document.querySelector('video');
+		if (video && !video._ytmusicSeekHandler) setupVideoEventListeners();
 		checkMetadataConsistency();
-		// Periodically ensure video listeners are attached
-		setupVideoEventListeners();
 	}
-}, 2000);
+}, 100);
 
 if (ENABLE_PLAYING_TAB_HEALTH_CHECK) {
 	setInterval(() => {
