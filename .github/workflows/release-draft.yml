@@ -9,6 +9,7 @@ env:
   VERSION: ''
   RELEASE_DATE: ''
   RELEASE_NOTES: ''
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
   contents: write
