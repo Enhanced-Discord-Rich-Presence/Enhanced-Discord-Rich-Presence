@@ -64,4 +64,4 @@ jobs:
           }
 
           git commit -m "Bump version to $env:VERSION"
-          git push origin HEAD:linux-support
+          git push origin HEAD:main
