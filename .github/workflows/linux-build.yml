@@ -76,7 +76,7 @@ jobs:
           
           python3 -c "
           import os
-          with open('install-template.sh', 'r') as f: text = f.read()
+          with open('build/install-template-linux.sh', 'r') as f: text = f.read()
           text = text.replace('__CHROME_MANIFEST_TEMPLATE__', os.environ['CHROME_JSON'])
           text = text.replace('__FIREFOX_MANIFEST_TEMPLATE__', os.environ['FIREFOX_JSON'])
           with open('temp-installer.sh', 'w') as f: f.write(text)
@@ -91,8 +91,8 @@ jobs:
           "
           
           mkdir -p Releases
-          cat temp-installer.sh App/dist/com.enhanced.rpc.bridge > Releases/EnhancedRPC-${{ env.VERSION }}-linux_x86_64-setup.sh
-          chmod +x Releases/EnhancedRPC-${{ env.VERSION }}-linux_x86_64-setup.sh
+          cat temp-installer.sh App/dist/com.enhanced.rpc.bridge > Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
+          chmod +x Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
           
           rm temp-installer.sh
 

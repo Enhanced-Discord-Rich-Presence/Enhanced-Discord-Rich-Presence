@@ -67,7 +67,14 @@ jobs:
         shell: pwsh
         run: |
             $version = "${{ github.ref_name }}" -replace "^v", ""
-            $currentDate = Get-Date -Format "dd.MM.yyyy"
+            $day = (Get-Date).Day
+            $suffix = switch ($day) {
+                1 { "st" } 21 { "st" } 31 { "st" }
+                2 { "nd" } 22 { "nd" }
+                3 { "rd" } 23 { "rd" }
+                default { "th" }
+            }
+            $currentDate = "$(Get-Date -Format "d")$suffix $(Get-Date -Format "MMMM yyyy")"
 
             $releaseHeader = "## [v$version] - $currentDate"
 
