@@ -55,6 +55,18 @@ jobs:
         run: |
           python -m PyInstaller --clean bridge.spec
 
+      - name: Prepare native host binary name
+        run: |
+          set -euo pipefail
+          if [ ! -f "App/dist/EnhancedRPC" ]; then
+            echo "Expected PyInstaller output App/dist/EnhancedRPC not found. Contents of App/dist:" >&2
+            ls -la App/dist || true
+            exit 1
+          fi
+
+          cp -f "App/dist/EnhancedRPC" "App/dist/com.enhanced.rpc.bridge"
+          chmod +x "App/dist/com.enhanced.rpc.bridge"
+
 
       - name: Assemble Installer Script
         run: |

@@ -84,7 +84,9 @@ jobs:
                 $releaseNotesArray += $lines[0]
                 $releaseNotesArray += ""
                 $releaseNotesArray += $releaseHeader
+              if ($lines.Count -gt 1) {
                 $releaseNotesArray += $lines[1..($lines.Count - 1)]
+              }
             } else {
                 $releaseNotesArray = @($releaseHeader, "", $lines)
             }
