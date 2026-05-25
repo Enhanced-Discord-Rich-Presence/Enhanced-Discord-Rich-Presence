@@ -38,7 +38,7 @@ install() {
     echo "==========================================="
 
     echo "Note: Discord cannot be installed via Snap, Flatpak, or any other system that installs Discord in a sandbox."
-    echo "You must use a native package manager, `.deb`, or `.tar.gz` installation, else it probably won't work."
+    echo "You must use a native package manager, .deb, or .tar.gz installation, else it probably won't work."
 
     mkdir -p "$BIN_DIR"
 
