@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Extension-v1.4.0-orange"/>
-  <img src="https://img.shields.io/badge/Native-v1.5.0-orange"/>
+  <img src="https://img.shields.io/badge/Native-v1.7.0-orange"/>
 </p>
 
 <p align="center">
@@ -119,4 +119,5 @@ Designed for quick access without descriptions.
 - **Issues & Bug Reports**: [GitHub Issues](../../issues)
 - **Feature Requests**: [GitHub Discussions](../../discussions)
 - **Firefox Add-ons**: [Firefox Add-ons store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/)
+
 
