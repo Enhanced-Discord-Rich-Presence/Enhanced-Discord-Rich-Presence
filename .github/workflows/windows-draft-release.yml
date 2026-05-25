@@ -22,7 +22,7 @@ jobs:
       - name: Checkout repository branch
         uses: actions/checkout@v4
         with:
-          ref: new-release-workflow # need to change to main once I merge it
+          ref: main
           fetch-depth: 0
 
 
@@ -58,8 +58,7 @@ jobs:
           }
 
           git commit -m "Bump version to $env:VERSION"
-          git push origin HEAD:new-release-workflow 
-# need to change to main once I merge it ^^^^^^^^^^
+          git push origin HEAD:main
 
 
 
@@ -137,7 +136,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          target_commitish: new-release-workflow # need to change to main once I merge it
+          target_commitish: main
           tag_name: ${{ github.ref_name }}
 
           name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
