@@ -57,7 +57,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Extension-v1.4.0-orange"/>
-  <img src="https://img.shields.io/badge/Native-v1.10.0-orange"/>
+  <img src="https://img.shields.io/badge/Native-v1.10.1-orange"/>
 </p>
 
 
@@ -197,4 +197,5 @@ If you need to remove the native app and extension from your system, follow the 
 - **Chrome / Brave / Vivaldi**: [Chrome Web Store](https://chromewebstore.google.com)
 - **Opera/GX**: [Opera Add-ons](https://addons.opera.com/)
 - **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons)
+
 
