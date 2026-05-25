@@ -49,6 +49,19 @@ class MultiServiceBridge:
         self.tab_to_service = {}       # tabId -> service
         self.last_payload_by_tab = {}  # tabId -> {message_data}
         self.selected_tab = {}         # service -> tabId
+        self.ipc_debug = {}            # service -> debug info about discord ipc
+
+    def _set_ipc_debug(self, service_type, **kwargs):
+        try:
+            current = self.ipc_debug.get(service_type)
+            if not isinstance(current, dict):
+                current = {}
+            current.update(kwargs)
+            current["updated_at"] = int(time.time())
+            current["platform"] = platform
+            self.ipc_debug[service_type] = current
+        except Exception:
+            pass
 
     def _invalidate_pipe(self, service_type):
         pipe = self.pipes.pop(service_type, None)
@@ -80,6 +93,7 @@ class MultiServiceBridge:
         for i in range(10):
             try:
                 pipe_name = rf"\\.\pipe\discord-ipc-{i}"
+                self._set_ipc_debug(service_type, last_attempt=pipe_name)
                 pipe = win32file.CreateFile(
                     pipe_name,
                     win32file.GENERIC_READ | win32file.GENERIC_WRITE,
@@ -99,8 +113,13 @@ class MultiServiceBridge:
                 time.sleep(1)
                 
                 self.pipes[service_type] = pipe
+                self._set_ipc_debug(service_type, connected=True, connected_to=pipe_name, last_error="")
                 return pipe
             except Exception:
+                try:
+                    self._set_ipc_debug(service_type, connected=False, last_error="IPC connect failed")
+                except Exception:
+                    pass
                 continue
         return None
     
@@ -143,6 +162,8 @@ class MultiServiceBridge:
         base_dirs.append("/tmp")
 
         seen = set()
+        attempted = []
+        last_error = ""
         for base in base_dirs:
             if not base or base in seen:
                 continue
@@ -166,6 +187,16 @@ class MultiServiceBridge:
                         continue
                     seen.add(addr)
 
+                    try:
+                        display_addr = f"abstract:{addr[1:]}" if isinstance(addr, str) and addr.startswith("\0") else str(addr)
+                        attempted.append(display_addr)
+                        if len(attempted) > 40:
+                            attempted = attempted[-40:]
+                    except Exception:
+                        pass
+
+                    self._set_ipc_debug(service_type, connected=False, last_attempt=(attempted[-1] if attempted else ""), attempted=attempted)
+
                     if isinstance(addr, str) and not addr.startswith("\0"):
                         try:
                             if not os.path.exists(addr):
@@ -180,6 +211,8 @@ class MultiServiceBridge:
                         sock.connect(addr)
 
                         if not _handshake_and_validate(sock):
+                            last_error = "Handshake failed (no READY)"
+                            self._set_ipc_debug(service_type, connected=False, last_error=last_error, attempted=attempted)
                             try:
                                 sock.close()
                             except Exception:
@@ -188,8 +221,14 @@ class MultiServiceBridge:
 
                         sock.settimeout(None)
                         self.pipes[service_type] = sock
+                        self._set_ipc_debug(service_type, connected=True, connected_to=(attempted[-1] if attempted else ""), last_error="", attempted=attempted)
                         return sock
-                    except Exception:
+                    except Exception as e:
+                        try:
+                            last_error = f"{type(e).__name__}: {e}"
+                        except Exception:
+                            last_error = "IPC connect failed"
+                        self._set_ipc_debug(service_type, connected=False, last_error=last_error, attempted=attempted)
                         try:
                             if sock:
                                 sock.close()
@@ -197,6 +236,8 @@ class MultiServiceBridge:
                             pass
                         continue
 
+        if attempted:
+            self._set_ipc_debug(service_type, connected=False, last_error=(last_error or "Discord IPC socket not found"), attempted=attempted)
         return None
     
     def _send_frame(self, pipe, op, payload, service_type=None):
@@ -211,7 +252,12 @@ class MultiServiceBridge:
                 case "linux" | "macos":
                     pipe.sendall(header + data)
             return True
-        except Exception:
+        except Exception as e:
+            if service_type:
+                try:
+                    self._set_ipc_debug(service_type, last_send_error=f"{type(e).__name__}: {e}")
+                except Exception:
+                    pass
             if service_type:
                 self._invalidate_pipe(service_type)
             return False
@@ -629,7 +675,10 @@ def main():
                     "action": "STATUS_RESPONSE",
                     "active_services": list(bridge.pipes.keys()),
                     "selected_tabs": bridge.selected_tab,
-                    "rpc_data": bridge.last_payload_by_tab 
+                    "rpc_data": bridge.last_payload_by_tab,
+                    "ipc_debug": bridge.ipc_debug,
+                    "platform": platform,
+                    "pid": os.getpid(),
                 })
 
             elif action == "GET_VERSION":
