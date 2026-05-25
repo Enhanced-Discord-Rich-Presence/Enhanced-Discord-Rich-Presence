@@ -1,0 +1,150 @@
+name: Windows Draft Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  VERSION: ''
+  RELEASE_DATE: ''
+  CHANGELOG: ''
+  RELEASE_NOTES: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository branch
+        uses: actions/checkout@v4
+        with:
+          ref: new-release-workflow # need to change to main once I merge it
+          fetch-depth: 0
+
+
+      - name: Get version from tag
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace "^v", ""
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Update version files
+        shell: pwsh
+        run: |
+          $version = $env:VERSION
+          $readme = Get-Content README.md -Raw
+
+          Set-Content App/version.txt $version
+          $readme = $readme -replace 'Native-v\d+\.\d+\.\d+-orange', "Native-v$version-orange"
+
+          Set-Content README.md $readme
+
+      - name: Commit and push
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add App/version.txt README.md
+
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "No changes to commit"
+            exit 0
+          }
+
+          git commit -m "Bump version to $env:VERSION"
+          git push origin HEAD:new-release-workflow 
+# need to change to main once I merge it ^^^^^^^^^^
+
+
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+
+      - name: Build with PyInstaller
+        working-directory: App
+        shell: pwsh
+        run: |
+          python -m PyInstaller --version
+          python -m PyInstaller --clean bridge.spec
+
+      - name: Copy version file into dist
+        shell: pwsh
+        run: |
+          Copy-Item -Force App/version.txt App/dist/version.txt
+
+      - name: Verify PyInstaller output
+        shell: pwsh
+        run: Get-ChildItem -Recurse App/dist
+
+
+      - name: Compile Inno Setup installer
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+        with:
+          path: setup.iss
+
+
+      - name: Get version, date and changelog for release notes
+        shell: pwsh
+        run: |
+            $version = "${{ github.ref_name }}" -replace "^v", ""
+            $currentDate = Get-Date -Format "dd.MM.yyyy"
+
+            $releaseHeader = "## [v$version] - $currentDate"
+
+            $changelogPath = Join-Path $env:GITHUB_WORKSPACE "CHANGELOG.md"
+
+            if (Test-Path $changelogPath) {
+                $lines = Get-Content $changelogPath
+            } else {
+                $lines = @("# Changelog", "", "No changelog available.")
+            }
+
+            if ($lines.Count -gt 0 -and $lines[0] -match "^# Changelog") {
+                $releaseNotesArray = @()
+                $releaseNotesArray += $lines[0]
+                $releaseNotesArray += ""
+                $releaseNotesArray += $releaseHeader
+                $releaseNotesArray += $lines[1..($lines.Count - 1)]
+            } else {
+                $releaseNotesArray = @($releaseHeader, "", $lines)
+            }
+
+            $releaseNotesText = $releaseNotesArray -join "`n"
+
+            "VERSION=$version" >> $env:GITHUB_ENV
+            "RELEASE_DATE=$currentDate" >> $env:GITHUB_ENV
+
+            "RELEASE_NOTES<<EOF" >> $env:GITHUB_ENV
+            $releaseNotesText >> $env:GITHUB_ENV
+            "EOF" >> $env:GITHUB_ENV
+
+      - name: Create draft GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          target_commitish: new-release-workflow # need to change to main once I merge it
+          tag_name: ${{ github.ref_name }}
+
+          name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
+
+          body: ${{ env.RELEASE_NOTES }}
+
+          generate_release_notes: true
+          append_body: true
+
+          files: Releases/EnhancedRPC-*-windows-setup.exe
