@@ -40,8 +40,24 @@ body:
       options:
         - Windows
         - Linux
-        - macOS
         - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: linux_details
+    attributes:
+      label: Linux Distribution (If applicable)
+      description: If you selected "Linux" above, please select your distribution.
+      options:
+        - Ubuntu
+        - Fedora
+        - Arch
+        - Kali
+        - Mint
+        - Peppermint OS
+        - Other
+    validations:
+      required: false
   - type: dropdown
     id: browser
     attributes:

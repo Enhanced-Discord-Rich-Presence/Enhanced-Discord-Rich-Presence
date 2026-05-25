@@ -1,7 +1,7 @@
 # Changelog
 
 ### Added
-- added **Linux** and **macOS** support.
+- added **Linux** support.
 - added Support for:
   - `Google Chrome`
   - `Microsoft Edge`
@@ -12,6 +12,9 @@
   - `Chromium*`
 
 >`*`Chromium is supported, but some Browsers may have different Registry locations which makes them not work. If your browser doesn't work, feel free to open an Issue and I'll check if I can add it!
+
+### Changed
+- changed it so you can now change (or remove) the third line in `Listening` and `Competing` state.
 
 ## Repository Changelog
 
@@ -29,3 +32,9 @@
 - moved `setup.iss` into `build/`.
 - moved `Discord_IPC.md` to `docs/`.
 - adjusted `.gitignore` to have some IDE things
+- adjusted `Bug report` Issue template to contain information about Linux.
+
+
+## Known Issues
+
+- When the Extension is active across multiple browser windows simultaneously, executing the same Activity causes a race condition that leads to unpredictable behavior.
