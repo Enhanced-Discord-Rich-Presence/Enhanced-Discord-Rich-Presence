@@ -74,7 +74,7 @@ jobs:
                 3 { "rd" } 23 { "rd" }
                 default { "th" }
             }
-            $currentDate = "$(Get-Date -Format "d")$suffix $(Get-Date -Format "MMMM yyyy")"
+            $currentDate = $suffix $(Get-Date -Format "MMMM yyyy")"
 
             $releaseHeader = "## [v$version] - $currentDate"
 
