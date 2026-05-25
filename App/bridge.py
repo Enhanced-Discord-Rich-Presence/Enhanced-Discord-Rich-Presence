@@ -3,6 +3,7 @@ import json
 import os
 import struct
 import time
+import glob
 
 if sys.platform.startswith("win"):
     platform = "windows"
@@ -104,48 +105,98 @@ class MultiServiceBridge:
         return None
     
     def _get_pipe_unix(self, service_type, client_id):
+        def _recv_exact(sock_obj, length):
+            data = b""
+            while len(data) < length:
+                chunk = sock_obj.recv(length - len(data))
+                if not chunk:
+                    raise ConnectionError("Socket closed")
+                data += chunk
+            return data
+
+        def _handshake_and_validate(sock_obj):
+            if not self._send_frame(sock_obj, 0, {"v": 1, "client_id": client_id}, service_type=service_type):
+                return False
+
+            header = _recv_exact(sock_obj, 8)
+            op, length = struct.unpack("<II", header)
+            payload_raw = _recv_exact(sock_obj, length) if length > 0 else b"{}"
+            try:
+                payload_obj = json.loads(payload_raw.decode("utf-8"))
+            except Exception:
+                payload_obj = {}
+
+            return op == 1 and payload_obj.get("evt") == "READY"
+
         base_dirs = []
         for env in ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"]:
-            if os.environ.get(env):
-                base_dirs.append(os.environ[env])
-    
+            val = os.environ.get(env)
+            if val:
+                base_dirs.append(val)
+
+        if platform == "linux":
+            try:
+                base_dirs.append(f"/run/user/{os.getuid()}")
+            except Exception:
+                pass
+
         base_dirs.append("/tmp")
 
+        seen = set()
         for base in base_dirs:
+            if not base or base in seen:
+                continue
+            seen.add(base)
+
             for i in range(10):
-                path = os.path.join(base, f"discord-ipc-{i}")
-                
-                if not os.path.exists(path):
-                    continue
-                
-                try:
-                    # Flushing the buffer so we can read it without blocking
-                    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                    sock.settimeout(2.0)
-                    sock.connect(path)
-                    
-                    if not self._send_frame(sock, 0, {"v": 1, "client_id": client_id}, service_type=service_type):
+                candidates = []
+
+                candidates.append(os.path.join(base, f"discord-ipc-{i}"))
+
+                if base != "/tmp":
+                    candidates.extend(glob.glob(os.path.join(base, "app", "*", f"discord-ipc-{i}")))
+                    candidates.extend(glob.glob(os.path.join(base, "snap.*", f"discord-ipc-{i}")))
+                    candidates.extend(glob.glob(os.path.join(base, "snap", "*", f"discord-ipc-{i}")))
+
+                if platform == "linux":
+                    candidates.append("\0" + f"discord-ipc-{i}")
+
+                for addr in candidates:
+                    if addr in seen:
+                        continue
+                    seen.add(addr)
+
+                    if isinstance(addr, str) and not addr.startswith("\0"):
                         try:
-                            sock.close()
+                            if not os.path.exists(addr):
+                                continue
+                        except Exception:
+                            continue
+
+                    sock = None
+                    try:
+                        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                        sock.settimeout(2.0)
+                        sock.connect(addr)
+
+                        if not _handshake_and_validate(sock):
+                            try:
+                                sock.close()
+                            except Exception:
+                                pass
+                            continue
+
+                        sock.settimeout(None)
+                        self.pipes[service_type] = sock
+                        return sock
+                    except Exception:
+                        try:
+                            if sock:
+                                sock.close()
                         except Exception:
                             pass
                         continue
-                    
-                    try:
-                        header = sock.recv(8)
-                        if len(header) == 8:
-                            _, length = struct.unpack("<II", header)
-                            if length > 0:
-                                sock.recv(length)
-                    except Exception:
-                        pass
-                    
-                    sock.settimeout(None)
-                    
-                    self.pipes[service_type] = sock
-                    return sock
-                except Exception:
-                    continue
+
         return None
     
     def _send_frame(self, pipe, op, payload, service_type=None):
