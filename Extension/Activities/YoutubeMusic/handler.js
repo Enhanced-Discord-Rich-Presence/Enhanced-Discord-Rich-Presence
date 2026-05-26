@@ -56,7 +56,7 @@ async function checkBrowsingActivity() {
 	const rpcYoutubeMusic = cachedRpcYoutubeMusic;
 	if (!rpcYoutubeMusic) return;
 
-	
+
 	const showSongWhileBrowsing = rpcYoutubeMusic.showSongWhileBrowsing !== false;
 	if (showSongWhileBrowsing) {
 		if (isMusicCurrentlyPlaying()) return;
@@ -81,7 +81,7 @@ async function checkBrowsingActivity() {
 	if (!activityData || !activityData.enabled) return;
 
 	if (activityKey !== lastBrowsingActivityKey || activityData.text !== lastBrowsingActivityText) {
-		
+
 		const isNewActivity = lastBrowsingActivityKey === null ? (browsingActivityStartTime === null) : true;
 		lastBrowsingActivityKey = activityKey;
 		lastBrowsingActivityText = activityData.text;
@@ -89,7 +89,7 @@ async function checkBrowsingActivity() {
 			browsingActivityStartTime = Math.floor(Date.now() / 1000);
 		}
 
-		
+
 		const pausedConfig = rpcYoutubeMusic.paused || {};
 		const runningConfig = rpcYoutubeMusic.running || {};
 		const baseConfig = rpcYoutubeMusic.paused || rpcYoutubeMusic.running || rpcYoutubeMusic;
@@ -111,7 +111,7 @@ async function checkBrowsingActivity() {
 				: (runningConfig.name || settings.name);
 		}
 
-		
+
 		if (settings.buttons) {
 			settings.buttons = {
 				...settings.buttons,
@@ -130,7 +130,7 @@ async function checkBrowsingActivity() {
 			};
 		}
 
-		
+
 		if (settings.timestamps) {
 			settings.timestamps = { ...settings.timestamps, start: true, end: false };
 		}
@@ -157,7 +157,7 @@ async function checkBrowsingActivity() {
 			};
 		}
 
-		
+
 		const elapsed = browsingActivityStartTime
 			? Math.floor(Date.now() / 1000) - browsingActivityStartTime
 			: 0;
@@ -199,7 +199,7 @@ async function sendToBackground(action, isNewTrack = false) {
 		title,
 		author: authorData.name || "YouTube Music",
 		author_url: authorData.url || "",
-		author_avatar: "youtubemusic",
+		author_avatar: authorData.avatar || "youtubemusic",
 		thumbnail,
 		time: isNewTrack ? 0 : getCurrentTime(),
 		duration: isNewTrack ? getDuration() : getDuration(),
@@ -234,7 +234,7 @@ async function checkMetadataConsistency() {
 	const currentUrl = window.location.href;
 	const currentThumbnail = getThumbnailUrl();
 	const authorData = getAuthorData();
-    const currentTrackKey = getStableTrackKey();
+	const currentTrackKey = getStableTrackKey();
 	const currentTime = getCurrentTime();
 
 	const titleChanged = currentTitle !== lastSentTitle;
@@ -243,11 +243,11 @@ async function checkMetadataConsistency() {
 	const authorChanged = (authorData.name || "") !== (lastSentAuthor || "") || (authorData.url || "") !== (lastSentAuthorUrl || "");
 	const timeChanged = Math.abs(currentTime - lastSentTime) > 3;
 
-	
+
 	const currentlyPlaying = isMusicCurrentlyPlaying();
 	const playStateChanged = lastSentPlaying !== null && currentlyPlaying !== lastSentPlaying;
 
-	
+
 	const isNewTrack = currentTrackKey !== lastSentTrackKey;
 	const hasSignificantChange = isNewTrack || playStateChanged || authorChanged || titleChanged || urlChanged || thumbnailChanged || (timeChanged && !isNewTrack);
 	const isDataValid = !!currentTitle;
@@ -255,7 +255,7 @@ async function checkMetadataConsistency() {
 	if (hasSignificantChange && isDataValid) {
 		sendToBackground(currentlyPlaying ? "VIDEO_RESUMED" : "VIDEO_PAUSED", isNewTrack);
 
-		
+
 		if (informationPopups && isNewTrack) {
 			browser.runtime.sendMessage({
 				action: "show_broadcast_global",
@@ -356,7 +356,7 @@ async function handleNavigation() {
 	setupVideoEventListeners();
 	checkBrowsingActivity();
 
-	
+
 	let attempts = 0;
 	const checkMetadata = setInterval(async () => {
 		const queueItem = getQueueItem();
