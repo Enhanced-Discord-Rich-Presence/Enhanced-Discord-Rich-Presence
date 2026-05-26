@@ -1,3 +1,5 @@
+const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
 let state = {
     rpcEnabled: true,
     popupsEnabled: true,
@@ -146,7 +148,7 @@ async function refreshVersionInfo(forceRefresh = false) {
 
     versionInfoRequestInFlight = (async () => {
         try {
-            const info = await browser.runtime.sendMessage({
+            const info = await browserAPI.runtime.sendMessage({
                 action: 'GET_VERSION_INFO',
                 includeLatest: false,
                 forceRefresh
@@ -1073,14 +1075,14 @@ function attachListeners() {
             // For YouTube and YouTube Music, sync enabled state with both running and paused modes
             if (id === 'youtube' || id === 'youtubeMusic') {
                 const storageKey = id === 'youtube' ? 'rpcYoutube' : 'rpcYoutubeMusic';
-                const stored = await browser.storage.local.get(storageKey);
+                const stored = await browserAPI.storage.local.get(storageKey);
                 const root = stored[storageKey];
                 if (root) {
                     if (!root.running) root.running = {};
                     if (!root.paused) root.paused = {};
                     root.running.enabled = checked;
                     root.paused.enabled = checked;
-                    await browser.storage.local.set({ [storageKey]: root });
+                    await browserAPI.storage.local.set({ [storageKey]: root });
                 }
             } else {
                 setStorageData("enabled", checked);
@@ -1089,13 +1091,13 @@ function attachListeners() {
             if (state.rpcEnabled) {
                 if (id === 'custom') {
                     // Custom RPC: broadcast immediately with current settings
-                    browser.runtime.sendMessage({ 
+                    browserAPI.runtime.sendMessage({ 
                         action: "TRIGGER_CUSTOM_RPC",
                         enabled: checked
                     });
                 } else {
                     // YouTube/Music: sync with active tabs
-                    browser.runtime.sendMessage({ 
+                    browserAPI.runtime.sendMessage({ 
                         action: "TRIGGER_SYNC", 
                         enabled: checked,
                         platform: id
@@ -1311,8 +1313,8 @@ function attachListeners() {
     const infoBtn = document.getElementById('open-info');
     if (infoBtn) {
         infoBtn.onclick = () => {
-            browser.tabs.create({
-                url: browser.runtime.getURL('pages/info.html')
+            browserAPI.tabs.create({
+                url: browserAPI.runtime.getURL('pages/info.html')
             });
         };
     }
@@ -1332,7 +1334,7 @@ function attachListeners() {
 
             state.configs[sectionKey].editingMode = newMode;
 
-            const stored = await browser.storage.local.get(storageKey);
+            const stored = await browserAPI.storage.local.get(storageKey);
             const storedCfg = stored[storageKey];
 
             if (storedCfg && storedCfg[newMode]) {
@@ -1431,7 +1433,7 @@ function attachListeners() {
             setStorageData('showPausedRpc', e.target.checked);
 
             if (state.rpcEnabled && state.configs[id].enabled) {
-                browser.runtime.sendMessage({
+                browserAPI.runtime.sendMessage({
                     action: "TRIGGER_SYNC",
                     enabled: true,
                     platform: id
@@ -1451,7 +1453,7 @@ function attachListeners() {
             setStorageData('showSongWhileBrowsing', e.target.checked);
 
             if (state.rpcEnabled && state.configs[id].enabled) {
-                browser.runtime.sendMessage({
+                browserAPI.runtime.sendMessage({
                     action: "TRIGGER_SYNC",
                     enabled: true,
                     platform: id
@@ -1519,9 +1521,9 @@ function attachListeners() {
 
 document.getElementById('master-power').onclick = async () => {
     state.rpcEnabled = !state.rpcEnabled;
-    await browser.storage.local.set({ rpcEnabled: state.rpcEnabled });
+    await browserAPI.storage.local.set({ rpcEnabled: state.rpcEnabled });
     
-    browser.runtime.sendMessage({ 
+    browserAPI.runtime.sendMessage({ 
         action: "TRIGGER_SYNC", 
         enabled: state.rpcEnabled 
     });
@@ -1531,9 +1533,9 @@ document.getElementById('master-power').onclick = async () => {
 
 document.getElementById('toggle-status').onclick = async () => {
     state.rpcEnabled = !state.rpcEnabled;
-    await browser.storage.local.set({ rpcEnabled: state.rpcEnabled }); 
+    await browserAPI.storage.local.set({ rpcEnabled: state.rpcEnabled }); 
     
-    browser.runtime.sendMessage({ 
+    browserAPI.runtime.sendMessage({ 
         action: "TRIGGER_SYNC", 
         enabled: state.rpcEnabled 
     });
@@ -1543,7 +1545,7 @@ document.getElementById('toggle-status').onclick = async () => {
 
 document.getElementById('toggle-popups').onclick = async () => {
     state.popupsEnabled = !state.popupsEnabled;
-    await browser.storage.local.set({ informationPopups: state.popupsEnabled });
+    await browserAPI.storage.local.set({ informationPopups: state.popupsEnabled });
     render();
 };
 
@@ -1551,13 +1553,13 @@ function getPythonStatus() {
     return new Promise((resolve) => {
         const listener = (msg) => {
             if (msg.action === "PYTHON_RESPONSE") {
-                browser.runtime.onMessage.removeListener(listener);
+                browserAPI.runtime.onMessage.removeListener(listener);
                 resolve(msg.payload);
             }
         };
-        browser.runtime.onMessage.addListener(listener);
+        browserAPI.runtime.onMessage.addListener(listener);
 
-        browser.runtime.sendMessage({ action: "REQUEST_DATA" });
+        browserAPI.runtime.sendMessage({ action: "REQUEST_DATA" });
     });
 }
 
@@ -1579,9 +1581,9 @@ async function handleToastTrigger() {
             console.log("RPC Data:", rpc);
             const payload = rpc.payload;
 
-            const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+            const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
 
-            await browser.tabs.sendMessage(tab.id, {
+            await browserAPI.tabs.sendMessage(tab.id, {
                 action: "show_toast", 
                 data: {
                     type: 3,
@@ -1593,12 +1595,12 @@ async function handleToastTrigger() {
                 }
             });
         } else {
-            const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+            const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
 
             const config = state.configs[state.expandedSection];
             const reverseTypeMap = {'Playing': 0, 'Listening': 2, 'Watching': 3, 'Competing': 5};
 
-            await browser.tabs.sendMessage(tab.id, {
+            await browserAPI.tabs.sendMessage(tab.id, {
                 action: "show_toast", 
                 data: {
                     type: reverseTypeMap[config.type] ?? 0,
@@ -1737,7 +1739,7 @@ function showInternalWarning() {
 
 document.getElementById('btn-toast-trigger').addEventListener('click', async () => {
     try {
-        await browser.runtime.sendMessage({ action: 'SELECT_ACTIVE_TAB_FOR_RPC' });
+        await browserAPI.runtime.sendMessage({ action: 'SELECT_ACTIVE_TAB_FOR_RPC' });
     } catch { }
 });
 
@@ -1755,7 +1757,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reloadBtn.textContent = 'Resetting...';
 
         try {
-            const response = await browser.runtime.sendMessage({ action: 'TRIGGER_RELOAD' });
+            const response = await browserAPI.runtime.sendMessage({ action: 'TRIGGER_RELOAD' });
 
             if (response && response.ok) {
                 reloadBtn.textContent = 'Reset Complete';
@@ -1888,7 +1890,7 @@ async function refreshUpdateBanner() {
     if (!banner || !linkBtn) return;
 
     try {
-        const status = await browser.runtime.sendMessage({ action: 'GET_UPDATE_STATUS' });
+        const status = await browserAPI.runtime.sendMessage({ action: 'GET_UPDATE_STATUS' });
         if (!status || status.kind !== 'update_available') {
             banner.style.display = 'none';
             return;
@@ -1903,7 +1905,7 @@ async function refreshUpdateBanner() {
 
         if (muteToggle) {
             try {
-                const st = await browser.storage.local.get('muteUpdateNotifications');
+                const st = await browserAPI.storage.local.get('muteUpdateNotifications');
                 muteToggle.checked = st.muteUpdateNotifications === true;
             } catch {
                 muteToggle.checked = false;
@@ -1911,7 +1913,7 @@ async function refreshUpdateBanner() {
 
             muteToggle.onchange = async () => {
                 try {
-                    await browser.storage.local.set({ muteUpdateNotifications: !!muteToggle.checked });
+                    await browserAPI.storage.local.set({ muteUpdateNotifications: !!muteToggle.checked });
                 } catch { }
             };
         }
@@ -1923,7 +1925,7 @@ async function refreshUpdateBanner() {
         linkBtn.onclick = () => {
             if (url) {
                 try {
-                    browser.tabs.create({ url });
+                    browserAPI.tabs.create({ url });
                 } catch { }
             }
         };
@@ -1960,7 +1962,7 @@ async function setStorageData(path, newVal) {
     let dataSection;
     try {
         dataSection = currentSectionMapping();
-        const data = await browser.storage.local.get(dataSection);
+        const data = await browserAPI.storage.local.get(dataSection);
         let rootObj = data[dataSection] || {};
 
         let target;
@@ -1987,18 +1989,18 @@ async function setStorageData(path, newVal) {
         current[keys[keys.length - 1]] = newVal;
         // --------------------
 
-        await browser.storage.local.set({ [dataSection]: rootObj });
+        await browserAPI.storage.local.set({ [dataSection]: rootObj });
         
         // Auto-update RPC when settings change
         if (state.rpcEnabled) {
             if (state.expandedSection === 'custom' && state.configs.custom.enabled) {
-                browser.runtime.sendMessage({ 
+                browserAPI.runtime.sendMessage({ 
                     action: "TRIGGER_CUSTOM_RPC",
                     enabled: true
                 });
             } else if ((state.expandedSection === 'youtube' || state.expandedSection === 'youtubeMusic') && state.configs[state.expandedSection].enabled) {
                 // Trigger sync for YouTube/Music to re-broadcast with updated settings
-                browser.runtime.sendMessage({ 
+                browserAPI.runtime.sendMessage({ 
                     action: "TRIGGER_SYNC", 
                     enabled: true,
                     platform: state.expandedSection
@@ -2040,20 +2042,20 @@ window.addEventListener('message', (event) => {
 
 window.onload = async () => {
     try {
-        const stored = await browser.storage.local.get(null); 
+        const stored = await browserAPI.storage.local.get(null); 
 
         if (stored.rpcEnabled !== undefined) {state.rpcEnabled = stored.rpcEnabled; }
         if (stored.informationPopups !== undefined) {state.popupsEnabled = stored.informationPopups; }
 
         try {
-            const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+            const [activeTab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
             if (activeTab && activeTab.url) {
                 if (activeTab.url.includes('music.youtube.com')) {
                     state.expandedSection = 'youtubeMusic';
                 } else if (activeTab.url.includes('youtube.com')) {
                     state.expandedSection = 'youtube';
                 } else {
-                    const ytTabs = await browser.tabs.query({
+                    const ytTabs = await browserAPI.tabs.query({
                         url: ["*://*.youtube.com/*", "*://music.youtube.com/*"]
                     });
                     const hasMusicTab = ytTabs.some(t => t.url && t.url.includes('music.youtube.com'));
@@ -2087,7 +2089,7 @@ window.onload = async () => {
 
                 if (!stored.rpcYoutube.browsingActivities) {
                     const rpcYoutube = { ...stored.rpcYoutube, browsingActivities: browsingCfg };
-                    await browser.storage.local.set({ rpcYoutube });
+                    await browserAPI.storage.local.set({ rpcYoutube });
                 }
             }
         }
@@ -2115,7 +2117,7 @@ window.onload = async () => {
                     paused
                 };
 
-                await browser.storage.local.set({ rpcYoutubeMusic });
+                await browserAPI.storage.local.set({ rpcYoutubeMusic });
                 stored.rpcYoutubeMusic = rpcYoutubeMusic;
             }
 
@@ -2140,7 +2142,7 @@ window.onload = async () => {
 
                 if (!stored.rpcYoutubeMusic.browsingActivities) {
                     const rpcYoutubeMusic = { ...stored.rpcYoutubeMusic, browsingActivities: browsingCfg };
-                    await browser.storage.local.set({ rpcYoutubeMusic });
+                    await browserAPI.storage.local.set({ rpcYoutubeMusic });
                 }
             }
         }
@@ -2164,3 +2166,8 @@ window.onload = async () => {
         warmupVersionInfo();
     }
 };
+
+document.getElementById('btn-open-settings').addEventListener('click', () => {
+    const targetUrl = browser.runtime.getURL('pages/settings.html');     
+    browser.tabs.create({ url: targetUrl });
+});

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activity Cards</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      background: #111;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+    iframe {
+      width: 100%;
+      min-height: 300px;
+      border: 0;
+      background: #000;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+    <body>
+
+        <iframe id="YouTube" src="./components/activity-card.html" sandbox="allow-scripts allow-same-origin"></iframe>
+        <iframe id="YouTube_Music" src="./components/activity-card.html" sandbox="allow-scripts allow-same-origin"></iframe>
+        <iframe id="CustomRPC" src="./components/activity-card.html" sandbox="allow-scripts allow-same-origin"></iframe>
+        
+        <script src="settings.js" type="module"></script>
+    </body>
+</html>

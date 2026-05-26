@@ -1,0 +1,357 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+.activity-card {
+  --text-strong: #ededef;
+  --text-default: #fbfbfb;
+  --bg-card: #2c2d32;
+  --progress-fill: #fbfbfb;
+  --progress-remaining: #3d3e44;
+  --tooltip-bg: #242429;
+  --tooltip-border: #323237;
+  --tooltip-text: var(--text-default);
+
+  box-sizing: border-box;
+  background-color: var(--bg-card);
+  color: var(--text-strong);
+  width: 487px;
+  border-radius: 12px;
+  padding: 12px;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.activity-card,
+.activity-card * {
+  box-sizing: border-box;
+}
+
+.activity-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.activity-card .text-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.activity-card .platform-icon {
+  width: 11px;
+  height: 11px;
+  background-color: #96979e;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.activity-card .status-prefix,
+.activity-card .custom-activity-name {
+  font-size: 11px;
+}
+
+.activity-card .card-body {
+  display: flex;
+  gap: 13px;
+  padding-bottom: 10px;
+}
+
+.activity-card .thumbnail-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.activity-card .big-image-link,
+.activity-card .main-thumbnail-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.activity-card .big-image,
+.activity-card .main-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.activity-card .small-image-link,
+.activity-card .creator-avatar-link {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  transform: translate(12px, 10px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-card);
+  padding: 4px;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.activity-card .small-image,
+.activity-card .creator-avatar {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.activity-card .card-details {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+  margin-top: 16px;
+  transition: margin-top 0.2s ease;
+}
+
+.activity-card .card-details.has-buttons {
+  margin-top: 2px;
+}
+
+.activity-card .details {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--text-strong);
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.activity-card .text-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.activity-card .text-content .text-link {
+  display: block;
+  width: 100%;
+}
+
+.activity-card .state {
+  font-size: 12px;
+  color: var(--text-default);
+  margin-top: 1px;
+}
+
+.activity-card .third-line {
+  font-size: 12px;
+  color: var(--text-default);
+  margin-top: 1px;
+}
+
+.activity-card .progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.activity-card .time-stamp {
+  font-size: 12px;
+  color: var(--text-default);
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-card .progress-bar {
+  width: 261px;
+  height: 2px;
+  background-color: var(--progress-remaining);
+  border-radius: 2px;
+  overflow: hidden;
+  flex-grow: 0;
+}
+
+.activity-card .progress-fill {
+  height: 100%;
+  background-color: var(--progress-fill);
+  border-radius: 2px;
+  width: 0%;
+}
+
+.activity-card .static-time-container {
+  display: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-card .static-time-label {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-card .static-total-label,
+.activity-card .static-current-label {
+  color: #5bac75;
+}
+
+.activity-card .button-group-container {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  margin-left: 3px;
+  width: calc(100% - 3px);
+  grid-template-columns: 1fr 1fr;
+}
+
+.activity-card .button-group-container.single-button-mode,
+.activity-card .button-group-container.stacked-layout {
+  grid-template-columns: 1fr;
+}
+
+.activity-card .card-action-btn {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 100%;
+  background-color: #35353a;
+  border: 1px solid #39393e;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--tooltip-text);
+  text-align: center;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  padding: 0 18px;
+  transition: background-color 0.1s ease;
+}
+
+.activity-card .card-action-btn:hover {
+  background-color: #3d3e44;
+}
+
+.activity-card .card-action-btn:empty,
+.activity-card .button-group-container:empty {
+  display: none !important;
+}
+
+.activity-card
+  .tooltip-trigger:not(.small-image-link):not(.creator-avatar-link) {
+  position: relative;
+}
+
+.activity-card .tooltip-trigger::before,
+.activity-card .tooltip-trigger::after {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+  pointer-events: none;
+}
+
+.activity-card .tooltip-trigger::before {
+  content: attr(data-tooltip);
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+  padding: 6px 12px;
+  width: max-content;
+  max-width: 200px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  border-radius: 6px;
+  border: 1px solid var(--tooltip-border);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.activity-card .tooltip-trigger::after {
+  content: "";
+  bottom: calc(100% + 3px);
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background-color: var(--tooltip-bg);
+  border-right: 1px solid var(--tooltip-border);
+  border-bottom: 1px solid var(--tooltip-border);
+  transform: translateX(-50%) rotate(45deg);
+  z-index: 101;
+}
+
+.activity-card .big-image-link.tooltip-trigger::before,
+.activity-card .main-thumbnail-link.tooltip-trigger::before {
+  bottom: calc(100% + 10px);
+}
+
+.activity-card .big-image-link.tooltip-trigger::after,
+.activity-card .main-thumbnail-link.tooltip-trigger::after {
+  bottom: calc(100% + 5px);
+}
+
+.activity-card .tooltip-trigger:not([data-tooltip])::before,
+.activity-card .tooltip-trigger:not([data-tooltip])::after,
+.activity-card .tooltip-trigger[data-tooltip=""]::before,
+.activity-card .tooltip-trigger[data-tooltip=""]::after {
+  display: none !important;
+}
+
+.activity-card .tooltip-trigger:hover::before,
+.activity-card .tooltip-trigger:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Links */
+.activity-card .text-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.activity-card .details-link,
+.activity-card .state-link {
+  display: block;
+}
+
+.activity-card .details-link:hover .details,
+.activity-card .state-link:hover .state,
+.activity-card .third-line-link:hover .third-line {
+  text-decoration: underline;
+}
+
+.activity-card .text-link[href=""] {
+  cursor: default;
+  pointer-events: none;
+}
+
+.activity-card .card-header.icon-first {
+  flex-direction: row;
+}
+.activity-card .card-header.icon-first .platform-icon {
+  order: -1;
+}
+.activity-card .card-header.icon-first .text-group.hidden {
+  display: none;
+}

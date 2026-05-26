@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activity Card</title>
+    <link rel="stylesheet" href="./activity-card.css" />
+    <script src="./activity-card.js" defer></script>
+
+    <style>
+      body {
+        margin: 0;
+        background: #111;
+        padding: 24px;
+      }
+
+      .demo-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="cards" class="demo-list"></ul>
+
+    <template id="activity-card-template">
+      <li>
+        <article class="activity-card">
+          <header class="card-header">
+            <div class="text-group">
+              <span class="status-prefix"></span>
+              <span class="custom-activity-name"></span>
+            </div>
+            <div class="platform-icon"></div>
+          </header>
+
+          <div class="card-body">
+            <div class="thumbnail-container">
+              <a
+                href=""
+                target="_blank"
+                rel="noreferrer noopener"
+                class="big-image-link tooltip-trigger"
+                data-tooltip=""
+              >
+                <img class="big-image" alt="" src="" />
+              </a>
+
+              <a
+                href=""
+                target="_blank"
+                rel="noreferrer noopener"
+                class="small-image-link tooltip-trigger"
+                data-tooltip=""
+              >
+                <img class="small-image" alt="" src="" />
+              </a>
+            </div>
+
+            <div class="card-details">
+              <div class="text-content">
+                <a href="" class="text-link details-link">
+                  <h4 class="details"></h4>
+                </a>
+                <a href="" class="text-link state-link">
+                  <div class="state"></div>
+                </a>
+                <a href="" class="text-link third-line-link">
+                  <div class="third-line"></div>
+                </a>
+              </div>
+
+              <div class="progress-container">
+                <span class="time-stamp current-time"></span>
+                <div
+                  class="progress-bar"
+                  role="progressbar"
+                  aria-label="Playback progress"
+                >
+                  <div class="progress-fill"></div>
+                </div>
+                <span class="time-stamp total-time"></span>
+
+                <div class="static-time-container static-current-container">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="#5BAC75"
+                      d="M4 3a3 3 0 0 0-3 3v9a3 3 0 0 0 3 3h16a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4ZM6 20a1 1 0 1 0 0 2h12a1 1 0 1 0 0-2H6Z"
+                    />
+                  </svg>
+                  <span class="static-time-label static-current-label"></span>
+                </div>
+
+                <div class="static-time-container static-total-container">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill="#22c55e"
+                      d="M9.1 8.85A.5.5 0 0 1 9.45 8h5.1a.5.5 0 0 1 .35.85l-.84.85a3.25 3.25 0 0 0 0 4.6l2.06 2.06A3 3 0 0 1 17 18.5v1.01a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-1.01a3 3 0 0 1 .88-2.13l2.06-2.06a3.25 3.25 0 0 0 0-4.6l-.84-.85Z"
+                    />
+                    <path
+                      fill="#22c55e"
+                      fill-rule="evenodd"
+                      d="M7 1a3 3 0 0 0-3 3v1.51a6 6 0 0 0 1.76 4.25l2.06 2.06c.1.1.1.26 0 .36l-2.06 2.06A6 6 0 0 0 4 18.5V20a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1.51a6 6 0 0 0-1.76-4.25l-2.06-2.06a.25.25 0 0 1 0-.36l2.06-2.06A6 6 0 0 0 20 5.5V4a3 3 0 0 0-3-3H7ZM6 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1.51a4 4 0 0 1-1.17 2.83l-2.07 2.07c-.88.88-.88 2.3 0 3.18l2.07 2.07A4 4 0 0 1 18 18.49V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-1.51a4 4 0 0 1 1.17-2.83l2.07-2.07c.88-.88.88-2.3 0-3.18L7.17 8.34A4 4 0 0 1 6 5.51V4Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <span class="static-time-label static-total-label"></span>
+                </div>
+              </div>
+
+              <div class="button-group-container">
+                <button class="card-action-btn" data-button-url=""></button>
+                <button class="card-action-btn" data-button-url=""></button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </li>
+    </template>
+  </body>
+</html>

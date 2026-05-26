@@ -87,6 +87,36 @@ header {
     box-shadow: none;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-header-settings {
+    background: var(--bg-white-05);
+    border: 1px solid var(--border-white);
+    color: #9ca3af;
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backface-visibility: hidden;
+}
+
+.btn-header-settings:hover {
+    background: var(--bg-white-10);
+    color: #e5e7eb;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.btn-header-settings:active {
+    transform: scale(0.95);
+}
+
 .btn-power {
     border: none;
     padding: 8px;
