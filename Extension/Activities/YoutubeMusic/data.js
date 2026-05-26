@@ -85,6 +85,8 @@ function getAuthorData() {
 		return { name: playerArtist, url: playerBylineLink?.href || "", avatar: "" };
 	}
 
+	const artistAvatar = "https://banner.yt/" + document.querySelector("ytmusic-player-page ~ ytmusic-player-bar .middle-controls .subtitle yt-formatted-string")?.firstChild.href.split("/").at(-1) + "/avatar" || "youtubemusic";
+
 	const bylineElement = queueItem.querySelector('.byline');
 	const artistLink = bylineElement?.querySelector('a');
 
@@ -97,7 +99,7 @@ function getAuthorData() {
 
 	const artistUrl = artistLink?.href || "";
 
-	return { name: artistName, url: artistUrl, avatar: "" };
+	return { name: artistName, url: artistUrl, avatar: artistAvatar };
 }
 
 function getThumbnailUrl() {

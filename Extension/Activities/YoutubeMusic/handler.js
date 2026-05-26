@@ -199,7 +199,7 @@ async function sendToBackground(action, isNewTrack = false) {
 		title,
 		author: authorData.name || "YouTube Music",
 		author_url: authorData.url || "",
-		author_avatar: "youtubemusic",
+		author_avatar: authorData.avatar || "youtubemusic",
 		thumbnail,
 		time: isNewTrack ? 0 : getCurrentTime(),
 		duration: isNewTrack ? getDuration() : getDuration(),
