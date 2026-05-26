@@ -60,7 +60,7 @@ let state = {
             showCurrentTime: true,
             showLength: true,
             largeImage: { enabled: true, text: '', key: '%thumbnail%', url: '%url%', urlEnabled: true },
-            smallImage: { enabled: true, text: '%author%', key: 'youtubemusic', url: '', urlEnabled: false },
+            smallImage: { enabled: true, text: '%author%', key: '%author_avatar%', url: '%author_url%', urlEnabled: true },
             button1: { enabled: true, text: 'Listen Now', url: '%url%' },
             button2: { enabled: false, text: 'View Artist', url: '' },
             browsingActivities: {
@@ -962,8 +962,8 @@ function showTooltip(icon) {
               <span class="tag-pill">%thumbnail%</span>
               <span class="tag-pill">%url%</span>
               <span class="tag-pill">%author%</span>
-              ${isYoutubeMusic ? '' : '<span class="tag-pill">%author_avatar%</span>'}
-              ${isYoutubeMusic ? '' : '<span class="tag-pill">%author_url%</span>'}
+                            <span class="tag-pill">%author_avatar%</span>
+                            <span class="tag-pill">%author_url%</span>
             </div>
         `;
     }
