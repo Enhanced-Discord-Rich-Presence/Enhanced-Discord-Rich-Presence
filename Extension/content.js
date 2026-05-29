@@ -1,3 +1,5 @@
+const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
 let activeToast = null;
 let toastTimer = null;
 let activeBroadcast = null;
@@ -5,7 +7,7 @@ let broadcastTimer = null;
 let oldData = null;
 let activeUpdateModal = null;
 
-browser.runtime.onMessage.addListener((request) => {
+browserAPI.runtime.onMessage.addListener((request) => {
     if (request.action === "show_toast") {
         showToast(request.data);
     }
@@ -236,7 +238,7 @@ function createUpdateModal(data) {
             if (host.parentNode) host.remove();
             if (activeUpdateModal === host) activeUpdateModal = null;
             try {
-                browser.runtime.sendMessage({ action: 'UPDATE_MODAL_DISMISSED', kind: host.dataset.kind || '' });
+                browserAPI.runtime.sendMessage({ action: 'UPDATE_MODAL_DISMISSED', kind: host.dataset.kind || '' });
             } catch { }
         });
     }

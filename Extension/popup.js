@@ -60,7 +60,7 @@ let state = {
             showCurrentTime: true,
             showLength: true,
             largeImage: { enabled: true, text: '', key: '%thumbnail%', url: '%url%', urlEnabled: true },
-            smallImage: { enabled: true, text: '%author%', key: '%author_avatar%', url: '%author_url%', urlEnabled: true },
+            smallImage: { enabled: true, text: '%author%', key: 'youtubemusic', url: '', urlEnabled: false },
             button1: { enabled: true, text: 'Listen Now', url: '%url%' },
             button2: { enabled: false, text: 'View Artist', url: '' },
             browsingActivities: {
@@ -112,7 +112,7 @@ const SVGS = {
     'mouse-pointer-2': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l7.07 17 2.51-7.39L21 11.07z"></path><path d="M13 13l6 6"></path></svg>`,
     'link': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
     'type': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>`,
-    'key': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3y-3.5"></path></svg>`,
+    'key': `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3v-3.5"></path></svg>`,
     'check': `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>`,
     'info-circle': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
 };
@@ -350,18 +350,16 @@ function render() {
                                                                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
                                                             </svg>
                             </div>
-                            ${cfg.type === 'Playing' ? `
-                                <div class="tooltip-container" style="transform: translateY(2px); margin-left: 4px; color: #9ca3af;">
-                                    <svg class="activity-icon warning-icon--orange" data-label="PlayingInformation" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                    </svg>
-                                </div>
-                            ` : ''}
+                                                        <div class="tooltip-container" style="transform: translateY(2px); margin-left: 4px; color: #9ca3af;">
+                                                            <svg class="activity-icon warning-icon--orange" data-label="PlayingDisabled" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                                            </svg>
+                                                        </div>
                         </label>
                         <select data-id="${id}" class="type-select">
-                            <option ${cfg.type === 'Playing' ? 'selected' : ''}>Playing</option>
+                                                        <option disabled ${cfg.type === 'Playing' ? 'selected' : ''}>Playing</option>
                             <option ${cfg.type === 'Listening' ? 'selected' : ''}>Listening</option>
                             <option ${cfg.type === 'Watching' ? 'selected' : ''}>Watching</option>
                             <option ${cfg.type === 'Competing' ? 'selected' : ''}>Competing</option>
@@ -820,11 +818,10 @@ function renderConfigRow(platformId, fieldKey, label, fieldCfg, isAsset) {
     const secondIcon = isAsset ? SVGS['key'] : SVGS['link'];
     const warningSvg = `<svg class="warning-icon" data-label="AuthorURLWarning" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
     const listeningWarningSvg = `<svg class="warning-icon warning-icon--orange" data-label="ListeningLargeImageWarning" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-    const isListeningLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Listening'
-    const isCompetingLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Competing'
+    const isListeningLargeImage = fieldKey === 'largeImage' && state.configs[platformId]?.type === 'Listening';
     
     let textWarningIcon = '';
-    if (isListeningLargeImage || isCompetingLargeImage) {
+    if (isListeningLargeImage) {
         textWarningIcon = `<div class="tooltip-container">${listeningWarningSvg}</div>`;
     } else if (platformId === 'youtube' && fieldCfg.text.includes('%author_url%')) {
         textWarningIcon = `<div class="tooltip-container">${warningSvg}</div>`;
@@ -902,7 +899,7 @@ function showTooltip(icon) {
     const isYoutubeMusic = state.expandedSection === 'youtubeMusic';
     const suppressDynamicTags = label === 'AuthorURLWarning'
         || label === 'ListeningLargeImageWarning'
-        ;
+        || label === 'PlayingDisabled';
 
     let tooltipContentHtml = '';
     if (label === 'Details') {
@@ -923,10 +920,10 @@ function showTooltip(icon) {
             <p class="tooltip-text">If you select Playing, it will be hidden if another application with a "Playing" status is also running.<br><br>The others will always show.</p>
             <div class="tooltip-divider"></div>
         `;
-    } else if (label === 'PlayingInformation') {
+    } else if (label === 'PlayingDisabled') {
         tooltipContentHtml += `
-            <div class="tooltip-header">Playing Information</div>
-            <p class="tooltip-text">Discord can only have ONE playing activity at a time. It might not show if another app already uses it.</p>
+            <div class="tooltip-header">Playing Disabled</div>
+            <p class="tooltip-text">Playing is currently disabled due to issues.</p>
             <div class="tooltip-divider"></div>
         `;
     } else if (label === 'AuthorURLWarning') {
@@ -937,7 +934,7 @@ function showTooltip(icon) {
         `;
     } else if (label === 'ListeningLargeImageWarning') {
         tooltipContentHtml += `
-            <div class="tooltip-header">Listening/Competing Mode</div>
+            <div class="tooltip-header">Listening Mode</div>
             <p class="tooltip-text">If you want to remove or add a text below your state, you must either leave this text empty or set it.</p>
             <div class="tooltip-divider"></div>
         `;
@@ -964,8 +961,8 @@ function showTooltip(icon) {
               <span class="tag-pill">%thumbnail%</span>
               <span class="tag-pill">%url%</span>
               <span class="tag-pill">%author%</span>
-                            <span class="tag-pill">%author_avatar%</span>
-                            <span class="tag-pill">%author_url%</span>
+              ${isYoutubeMusic ? '' : '<span class="tag-pill">%author_avatar%</span>'}
+              ${isYoutubeMusic ? '' : '<span class="tag-pill">%author_url%</span>'}
             </div>
         `;
     }
@@ -1780,7 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function mapStorageToState(storageConfig, uiConfig) {
-    const typeMap = { 0: 'Playing', 2: 'Listening', 3: 'Watching', 5: 'Competing' };
+    const typeMap = { 0: 'Watching', 2: 'Listening', 3: 'Watching', 5: 'Competing' };
 
     if (!storageConfig || !uiConfig) return;
 

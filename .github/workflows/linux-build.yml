@@ -1,0 +1,105 @@
+name: Linux Build
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+env:
+  VERSION: ''
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+
+      - name: Get version from tag
+        run: |
+          INPUT_VERSION="${{ inputs.version }}"
+          CLEAN_VERSION="${INPUT_VERSION#v}"
+          echo "VERSION=$CLEAN_VERSION" >> $GITHUB_ENV
+
+
+      - name: Download version artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: version-metadata
+          path: App/
+
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build with PyInstaller
+        working-directory: App
+        run: |
+          python -m PyInstaller --clean bridge.spec
+
+      - name: Prepare native host binary name
+        run: |
+          set -euo pipefail
+          if [ ! -f "App/dist/EnhancedRPC" ]; then
+            echo "Expected PyInstaller output App/dist/EnhancedRPC not found. Contents of App/dist:" >&2
+            ls -la App/dist || true
+            exit 1
+          fi
+
+          cp -f "App/dist/EnhancedRPC" "App/dist/com.enhanced.rpc.bridge"
+          chmod +x "App/dist/com.enhanced.rpc.bridge"
+
+
+      - name: Assemble Installer Script
+        run: |
+          CHROME_JSON=$(cat App/app_manifest.chrome.json)
+          FIREFOX_JSON=$(cat App/app_manifest.firefox.json)
+          export CHROME_JSON FIREFOX_JSON
+          
+          python3 -c "
+          import os
+          with open('build/install-template-linux.sh', 'r') as f: text = f.read()
+          text = text.replace('__CHROME_MANIFEST_TEMPLATE__', os.environ['CHROME_JSON'])
+          text = text.replace('__FIREFOX_MANIFEST_TEMPLATE__', os.environ['FIREFOX_JSON'])
+          with open('temp-installer.sh', 'w') as f: f.write(text)
+          "
+
+          python3 -c "
+          from pathlib import Path
+          p = Path('temp-installer.sh')
+          text = p.read_text()
+          text = text.rstrip('\n') + '\n'
+          p.write_text(text)
+          "
+          
+          mkdir -p Releases
+          cat temp-installer.sh App/dist/com.enhanced.rpc.bridge > Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
+          chmod +x Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
+          
+          rm temp-installer.sh
+
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: Releases/*.sh

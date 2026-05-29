@@ -92,13 +92,13 @@
         "details_url": { "enabled": false, "url": "" },
         "state_url": { "enabled": false, "url": "" },
         "large_image_url": { "enabled": true, "url": "%url%" },
-        "small_image_url": { "enabled": true, "url": "%author_url%" },
+        "small_image_url": { "enabled": false, "url": "" },
         "custom_name": true
       },
       "timestamps": { "start": true, "end": true },
       "assets": {
         "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "" },
-        "small": { "enabled": true, "small_image": "%author_avatar%", "small_text": "%author%" }
+        "small": { "enabled": false, "small_image": "", "small_text": "" }
       },
       "buttons": {
         "1": { "enabled": true, "label": "Listen on YouTube Music", "url": "%url%" },
@@ -114,12 +114,12 @@
         "details_url": { "enabled": false, "url": "" },
         "state_url": { "enabled": false, "url": "" },
         "large_image_url": { "enabled": true, "url": "%url%" },
-        "small_image_url": { "enabled": true, "url": "%author_url%" }
+        "small_image_url": { "enabled": false, "url": "" }
       },
       "timestamps": { "start": false, "end": false },
       "assets": {
         "large": { "enabled": true, "large_image": "%thumbnail%", "large_text": "" },
-        "small": { "enabled": true, "small_image": "%author_avatar%", "small_text": "%author%" }
+        "small": { "enabled": false, "small_image": "", "small_text": "" }
       },
       "buttons": {
         "1": { "enabled": true, "label": "Listen on YouTube Music", "url": "%url%" },

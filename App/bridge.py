@@ -4,10 +4,19 @@ import os
 import struct
 import time
 
-platform = sys.platform
-match platform:
-    case "win32":
-        import win32file
+if sys.platform.startswith("win"):
+    platform = "windows"
+elif sys.platform.startswith("linux"):
+    platform = "linux"
+elif sys.platform.startswith("darwin"):
+    platform = "macos"
+else:
+    platform = "unknown"
+
+if platform == "windows":
+    import win32file
+elif platform in {"linux", "macos"}:
+    import socket
 
 from urllib.parse import urlparse, parse_qs
 
@@ -45,7 +54,11 @@ class MultiServiceBridge:
         if not pipe:
             return
         try:
-            win32file.CloseHandle(pipe)
+            match platform:
+                case "windows":
+                    win32file.CloseHandle(pipe)
+                case "linux" | "macos":
+                    pipe.close()
         except Exception:
             pass
     
@@ -56,6 +69,13 @@ class MultiServiceBridge:
         client_id = self.CLIENT_IDS.get(service_type)
         if not client_id: return None
 
+        match platform:
+            case "windows":
+                return self._get_pipe_windows(service_type, client_id)
+            case "linux" | "macos":
+                return self._get_pipe_unix(service_type, client_id)
+
+    def _get_pipe_windows(self, service_type, client_id):
         for i in range(10):
             try:
                 pipe_name = rf"\\.\pipe\discord-ipc-{i}"
@@ -83,12 +103,62 @@ class MultiServiceBridge:
                 continue
         return None
     
+    def _get_pipe_unix(self, service_type, client_id):
+        base_dirs = []
+        for env in ["XDG_RUNTIME_DIR", "TMPDIR", "TMP", "TEMP"]:
+            if os.environ.get(env):
+                base_dirs.append(os.environ[env])
+    
+        base_dirs.append("/tmp")
+
+        for base in base_dirs:
+            for i in range(10):
+                path = os.path.join(base, f"discord-ipc-{i}")
+                
+                if not os.path.exists(path):
+                    continue
+                
+                try:
+                    # Flushing the buffer so we can read it without blocking
+                    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    sock.settimeout(2.0)
+                    sock.connect(path)
+                    
+                    if not self._send_frame(sock, 0, {"v": 1, "client_id": client_id}, service_type=service_type):
+                        try:
+                            sock.close()
+                        except Exception:
+                            pass
+                        continue
+                    
+                    try:
+                        header = sock.recv(8)
+                        if len(header) == 8:
+                            _, length = struct.unpack("<II", header)
+                            if length > 0:
+                                sock.recv(length)
+                    except Exception:
+                        pass
+                    
+                    sock.settimeout(None)
+                    
+                    self.pipes[service_type] = sock
+                    return sock
+                except Exception:
+                    continue
+        return None
+    
     def _send_frame(self, pipe, op, payload, service_type=None):
         if not pipe: return
         try:
             data = json.dumps(payload).encode("utf-8")
             header = struct.pack("<II", op, len(data))
-            win32file.WriteFile(pipe, header + data)
+
+            match platform:
+                case "windows":
+                    win32file.WriteFile(pipe, header + data)
+                case "linux" | "macos":
+                    pipe.sendall(header + data)
             return True
         except Exception:
             if service_type:

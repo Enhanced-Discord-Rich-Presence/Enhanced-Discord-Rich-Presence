@@ -20,7 +20,7 @@ You will also need to install dependencies:
 pip install -r requirements.txt
 ```
 
-You will also need **Inno Setup** to build the Windows installer.
+If you work on Windows, you will also need **Inno Setup** to build the Windows installer.
 
 - Inno Setup (used to package the application into a Windows `.exe` installer)  
   https://jrsoftware.org/isinfo.php

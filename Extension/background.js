@@ -1,4 +1,7 @@
+const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
 const NATIVE_HOST = "com.enhanced.rpc.bridge";
+const CHROME_NATIVE_EXTENSION_ID = "jnlnkdmjkphemglpbgamnobklkhjpkco";
 let nativePort = null;
 let defaultSettings = null;
 
@@ -29,7 +32,7 @@ const dismissedUpdateModalByTab = new Map(); // tabId -> Set(kind)
 // When enabled, suppress update_available popups (native missing/invalid still show).
 let muteUpdateNotifications = false;
 try {
-    browser.storage.local.get('muteUpdateNotifications').then((st) => {
+    browserAPI.storage.local.get('muteUpdateNotifications').then((st) => {
         muteUpdateNotifications = st && st.muteUpdateNotifications === true;
     }).catch(() => { });
 } catch { }
@@ -123,6 +126,13 @@ function getServiceFromUrl(url) {
 
 function normalizeDisabledActivityTypes(settings) {
     if (!settings || typeof settings !== 'object') return settings;
+    const rawType = settings.type;
+    const numericType = (typeof rawType === 'number') ? rawType : Number(rawType);
+
+    // Playing (0) is currently disabled due to issues.
+    if (Number.isFinite(numericType) && numericType === 0) {
+        return { ...settings, type: 3 };
+    }
     return settings;
 }
 
@@ -193,7 +203,7 @@ function clearPendingUpdateModal() {
 
 async function isRpcEnabledForUpdateModal() {
     try {
-        const stored = await browser.storage.local.get('rpcEnabled');
+        const stored = await browserAPI.storage.local.get('rpcEnabled');
         return stored.rpcEnabled !== false;
     } catch {
         // Fail open to avoid accidentally breaking update checks on storage errors.
@@ -226,7 +236,7 @@ async function ensureNativeMissingModal() {
     updateModalRetryByTab.forEach(st => { if (st && st.timer) clearTimeout(st.timer); });
     updateModalRetryByTab.clear();
 
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
     if (tabs && tabs.length > 0) {
         const tab = tabs[0];
         scheduleTryShowUpdateModal(tab.id, tab.url);
@@ -262,7 +272,7 @@ async function ensureNativeInvalidModal() {
     updateModalRetryByTab.forEach(st => { if (st && st.timer) clearTimeout(st.timer); });
     updateModalRetryByTab.clear();
 
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
     if (tabs && tabs.length > 0) {
         const tab = tabs[0];
         scheduleTryShowUpdateModal(tab.id, tab.url);
@@ -273,7 +283,7 @@ async function ensureNativeInvalidModal() {
 
 async function loadDefaults(forceReload = false) {
     if (!defaultSettings || forceReload) {
-        const baseUrl = browser.runtime.getURL('default_settings.json');
+        const baseUrl = browserAPI.runtime.getURL('default_settings.json');
         const response = await fetch(`${baseUrl}?_=${Date.now()}`, {
             method: 'GET',
             cache: 'no-store'
@@ -283,10 +293,28 @@ async function loadDefaults(forceReload = false) {
     return defaultSettings;
 }
 
+function canUseChromeNativeMessaging() {
+    try {
+        const manifest = browserAPI.runtime.getManifest();
+        const isFirefoxBuild = !!(manifest && manifest.browser_specific_settings && manifest.browser_specific_settings.gecko && manifest.browser_specific_settings.gecko.id);
+        if (isFirefoxBuild) return true;
+        return browserAPI.runtime.id === CHROME_NATIVE_EXTENSION_ID;
+    } catch {
+        return true;
+    }
+}
+
 function getNativePort() {
     if (!nativePort) {
         try {
-            nativePort = browser.runtime.connectNative(NATIVE_HOST);
+            if (!canUseChromeNativeMessaging()) {
+                nativeHostReachable = false;
+                if (!shouldSuppressMissingModal()) {
+                    ensureNativeMissingModal();
+                }
+                return null;
+            }
+            nativePort = browserAPI.runtime.connectNative(NATIVE_HOST);
         } catch {
             nativePort = null;
             nativeHostReachable = false;
@@ -317,7 +345,7 @@ function getNativePort() {
                 }
             } catch { }
 
-            browser.runtime.sendMessage({
+            browserAPI.runtime.sendMessage({
                 action: "PYTHON_RESPONSE",
                 payload: response
             }).catch(() => {});
@@ -353,7 +381,7 @@ function getNativePort() {
 }
 
 async function getInstalledVersionsSnapshot() {
-    const extensionVersion = browser.runtime.getManifest().version || '';
+    const extensionVersion = browserAPI.runtime.getManifest().version || '';
     let nativeAppVersion = '';
 
     try {
@@ -458,7 +486,7 @@ async function restoreSelectedTabsAfterReset(selectedTabs) {
 
         let tab;
         try {
-            tab = await browser.tabs.get(Number(tabId));
+            tab = await browserAPI.tabs.get(Number(tabId));
         } catch {
             continue;
         }
@@ -483,7 +511,7 @@ async function performFullRpcReset() {
 
     rpcResetInFlight = (async () => {
         const defaults = await loadDefaults(true);
-        const settings = await browser.storage.local.get(defaults);
+        const settings = await browserAPI.storage.local.get(defaults);
 
         let selectedBeforeReset = {};
         try {
@@ -604,7 +632,15 @@ function requestNative(action, extra = {}, timeoutMs = 2000) {
             }, timeoutMs);
 
             pendingNativeRequests.set(requestId, { resolve, reject, timer });
-            port.postMessage({ action, requestId, ...extra });
+            try {
+                port.postMessage({ action, requestId, ...extra });
+            } catch (postError) {
+                pendingNativeRequests.delete(requestId);
+                clearTimeout(timer);
+                nativePort = null;
+                nativeHostReachable = false;
+                reject(postError);
+            }
         } catch (e) {
             reject(e);
         }
@@ -736,7 +772,7 @@ async function sendRequestSyncWithRetries(tabId, expectedUrl, maxAttempts = 18, 
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
         // Ensure the tab still exists and hasn't navigated away
         try {
-            const tab = await browser.tabs.get(tabId);
+            const tab = await browserAPI.tabs.get(tabId);
             const liveUrl = tab && tab.url;
             if (!isDisplayableUrl(liveUrl)) return false;
             if (expectedUrl && liveUrl !== expectedUrl) return false;
@@ -745,7 +781,7 @@ async function sendRequestSyncWithRetries(tabId, expectedUrl, maxAttempts = 18, 
         }
 
         try {
-            await browser.tabs.sendMessage(tabId, { action: 'REQUEST_SYNC', ...extraFields });
+            await browserAPI.tabs.sendMessage(tabId, { action: 'REQUEST_SYNC', ...extraFields });
             return true;
         } catch { }
 
@@ -789,7 +825,7 @@ async function tryShowPendingUpdateModal(tabId, url) {
     }
 
     try {
-        await browser.tabs.sendMessage(tabId, {
+        await browserAPI.tabs.sendMessage(tabId, {
             action: "show_update_modal",
             data: pendingUpdateModal
         });
@@ -839,7 +875,7 @@ function scheduleTryShowUpdateModal(tabId, url) {
         }
 
         try {
-            const tab = await browser.tabs.get(tabId);
+            const tab = await browserAPI.tabs.get(tabId);
             const liveUrl = tab && tab.url;
             if (!isDisplayableUrl(liveUrl) || liveUrl !== url) {
                 updateModalRetryByTab.delete(tabId);
@@ -955,7 +991,7 @@ async function checkForNativeAppUpdate() {
     updateModalRetryByTab.forEach(st => { if (st && st.timer) clearTimeout(st.timer); });
     updateModalRetryByTab.clear();
 
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
     if (tabs && tabs.length > 0) {
         const tab = tabs[0];
         scheduleTryShowUpdateModal(tab.id, tab.url);
@@ -963,19 +999,19 @@ async function checkForNativeAppUpdate() {
 }
 
 async function syncActiveTabs() {
-    const tabs = await browser.tabs.query({
+    const tabs = await browserAPI.tabs.query({
         url: ["*://*.youtube.com/*", "*://*.music.youtube.com/*"]
     });
 
     if (tabs.length > 0) {
         for (const tab of tabs) {
-            browser.tabs.sendMessage(tab.id, { action: "REQUEST_SYNC" }).catch(() => {
+            browserAPI.tabs.sendMessage(tab.id, { action: "REQUEST_SYNC" }).catch(() => {
             });
         }
     }
 }
 
-browser.runtime.onMessage.addListener(async (msg, sender) => {
+browserAPI.runtime.onMessage.addListener(async (msg, sender) => {
     if (msg.action === 'ENSURE_YTMUSIC_PLAYING_TAB_SELECTED') {
         const senderTab = sender && sender.tab;
         if (!senderTab || senderTab.id == null) return { ok: false, reason: 'no_sender_tab' };
@@ -1016,7 +1052,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         const port = getNativePort();
         if (!port) return { ok: false, reason: 'native_missing' };
 
-        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        const tabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
         if (!tabs || tabs.length === 0) return { ok: false, reason: 'no_active_tab' };
 
         const tab = tabs[0];
@@ -1097,7 +1133,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     }
     if (msg.action === "TRIGGER_CUSTOM_RPC") {
         const defaults = await loadDefaults();
-        const settings = await browser.storage.local.get(defaults);
+        const settings = await browserAPI.storage.local.get(defaults);
         const port = getNativePort();
         if (!port) return;
         
@@ -1151,7 +1187,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
         if (nativeHostReachable === false) return;
 
         const defaults = await loadDefaults();
-        const settings = await browser.storage.local.get(defaults);
+        const settings = await browserAPI.storage.local.get(defaults);
         if (!settings.rpcEnabled) return;
 
         const senderTab = sender && sender.tab;
@@ -1168,7 +1204,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
 
             if (selectedNow !== null && String(selectedNow) !== String(senderTab.id)) return;
 
-            await browser.tabs.sendMessage(senderTab.id, {
+            await browserAPI.tabs.sendMessage(senderTab.id, {
                 action: "show_broadcast",
                 data: msg.data
             });
@@ -1180,14 +1216,14 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     }
 
     const defaults = await loadDefaults();
-    const settings = await browser.storage.local.get(defaults);
+    const settings = await browserAPI.storage.local.get(defaults);
 
     if (!settings.rpcEnabled) return;
 
     // Check if this is the active tab
     let isActiveTab = false;
     if (sender.tab) {
-        const activeTabs = await browser.tabs.query({ active: true, currentWindow: true });
+        const activeTabs = await browserAPI.tabs.query({ active: true, currentWindow: true });
         isActiveTab = activeTabs.length > 0 && activeTabs[0].id === sender.tab.id;
     }
 
@@ -1275,7 +1311,7 @@ browser.runtime.onMessage.addListener(async (msg, sender) => {
     port.postMessage(data);
 });
 
-browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.url) {
         const url = changeInfo.url;
         const isYouTube = url.includes("youtube.com") || url.includes("music.youtube.com");
@@ -1306,7 +1342,7 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
 });
 
-browser.tabs.onRemoved.addListener((tabId) => {
+browserAPI.tabs.onRemoved.addListener((tabId) => {
     if (updateModalTargetTabId === tabId) {
         updateModalTargetTabId = null;
     }
@@ -1334,13 +1370,13 @@ browser.tabs.onRemoved.addListener((tabId) => {
     })();
 });
 
-browser.tabs.onActivated.addListener(async (activeInfo) => {
-    const tab = await browser.tabs.get(activeInfo.tabId);
+browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
+    const tab = await browserAPI.tabs.get(activeInfo.tabId);
     const url = tab.url || "";
     const isYouTube = url.includes("youtube.com") || url.includes("music.youtube.com");
     
     if (isYouTube) {
-        browser.tabs.sendMessage(activeInfo.tabId, { action: "REQUEST_SYNC" }).catch(() => { });
+        browserAPI.tabs.sendMessage(activeInfo.tabId, { action: "REQUEST_SYNC" }).catch(() => { });
     }
 });
 
@@ -1429,9 +1465,9 @@ function normalizeRpcYoutubeMusicConfig(config, defaultsConfig = {}) {
 }
 
 async function initializeStorage() {
-    const response = await fetch(browser.runtime.getURL('default_settings.json'));
+    const response = await fetch(browserAPI.runtime.getURL('default_settings.json'));
     const defaults = await response.json();
-    const current = await browser.storage.local.get();
+    const current = await browserAPI.storage.local.get();
 
     const merged = deepMerge(defaults, current);
 
@@ -1442,7 +1478,7 @@ async function initializeStorage() {
     if (current.rpcEnabled !== undefined) merged.rpcEnabled = current.rpcEnabled;
     if (current.informationPopups !== undefined) merged.informationPopups = current.informationPopups;
 
-    await browser.storage.local.set(merged);
+    await browserAPI.storage.local.set(merged);
 
     if (merged.rpcEnabled) {
         syncActiveTabs();
@@ -1461,13 +1497,13 @@ async function initializeStorage() {
     }
 }
 
-browser.runtime.onInstalled.addListener(async (details) => {
+browserAPI.runtime.onInstalled.addListener(async (details) => {
     if (details.reason === "install") {
         // console.log("First time install: Setting defaults.");
         await initializeStorage();
         try {
-            await browser.tabs.create({
-                url: browser.runtime.getURL('pages/info.html'),
+            await browserAPI.tabs.create({
+                url: browserAPI.runtime.getURL('pages/info.html'),
                 active: true
             });
         } catch { }
@@ -1477,11 +1513,11 @@ browser.runtime.onInstalled.addListener(async (details) => {
     }
 });
 
-browser.runtime.onStartup.addListener(() => {
+browserAPI.runtime.onStartup.addListener(() => {
     checkForNativeAppUpdate();
 });
 
-browser.storage.onChanged.addListener((changes, areaName) => {
+browserAPI.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== 'local' || !changes) return;
 
     if (changes.muteUpdateNotifications) {
@@ -1506,20 +1542,20 @@ setTimeout(() => {
     checkForNativeAppUpdate();
 }, 2000);
 
-browser.runtime.onSuspend.addListener(() => {
+browserAPI.runtime.onSuspend.addListener(() => {
     const port = getNativePort();
     if (port) port.postMessage({ action: "CLEAR_RPC" });
 });
 
-browser.tabs.onActivated.addListener(async (activeInfo) => {
+browserAPI.tabs.onActivated.addListener(async (activeInfo) => {
     if (!pendingUpdateModal) return;
     try {
-        const tab = await browser.tabs.get(activeInfo.tabId);
+        const tab = await browserAPI.tabs.get(activeInfo.tabId);
         scheduleTryShowUpdateModal(activeInfo.tabId, tab && tab.url);
     } catch { }
 });
 
-browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browserAPI.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (!pendingUpdateModal) return;
     if (changeInfo.url) {
         scheduleTryShowUpdateModal(tabId, changeInfo.url);

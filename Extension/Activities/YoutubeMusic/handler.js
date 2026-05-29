@@ -8,7 +8,6 @@ let lastSentUrl = "";
 let lastSentThumbnail = "";
 let lastSentAuthor = "";
 let lastSentAuthorUrl = "";
-let lastSentAuthorAvatar = "";
 let lastSentPlaying = null;
 let lastSentTrackKey = "";
 let lastSentTime = 0;
@@ -21,9 +20,6 @@ let browsingActivityCheckInterval = null;
 let cachedInformationPopups = null;
 let cachedRpcYoutubeMusic = null;
 let playingTabHealthCheckInFlight = false;
-
-const authorMetaCache = new Map(); // key=url -> { channelUrl, avatarUrl }
-const pendingAuthorMetaFetches = new Map(); // key=url -> Promise<{ channelUrl, avatarUrl }>
 
 async function refreshCachedSettings() {
 	try {
@@ -39,175 +35,6 @@ browser.storage.onChanged.addListener((changes, area) => {
 	if (changes.informationPopups) cachedInformationPopups = changes.informationPopups.newValue;
 	if (changes.rpcYoutubeMusic) cachedRpcYoutubeMusic = changes.rpcYoutubeMusic.newValue;
 });
-
-function normalizeAbsoluteUrl(url) {
-	if (!url) return "";
-	try {
-		return new URL(String(url), window.location.origin).toString();
-	} catch {
-		return "";
-	}
-}
-
-function isLikelyChannelUrl(url) {
-	try {
-		const u = new URL(String(url));
-		const p = u.pathname || "";
-		return p.startsWith("/@") || p.includes("/channel/");
-	} catch {
-		return false;
-	}
-}
-
-function coerceChannelUrlToCurrentOrigin(url) {
-	try {
-		const u = new URL(String(url));
-		const p = u.pathname || "";
-		if (!(p.startsWith("/@") || p.includes("/channel/"))) return url;
-		if (u.origin === window.location.origin) return u.toString();
-		return `${window.location.origin}${u.pathname}${u.search}`;
-	} catch {
-		return url;
-	}
-}
-
-function getAuthorChannelUrl() {
-	const authorData = getAuthorData();
-	const candidates = [];
-
-	if (authorData && authorData.url) candidates.push(authorData.url);
-
-	const queueItem = getQueueItem();
-	if (queueItem) {
-		const qLink = queueItem.querySelector('.byline a');
-		if (qLink && qLink.href) candidates.push(qLink.href);
-	}
-
-	const playerBar = document.querySelector('ytmusic-player-bar');
-	if (playerBar) {
-		const barCandidates = playerBar.querySelectorAll('a[href*="/channel/"], a[href^="/@"], .byline a, .content-info-wrapper .byline a');
-		for (const a of barCandidates) {
-			if (a && a.href) candidates.push(a.href);
-		}
-	}
-
-	for (const raw of candidates) {
-		const abs = normalizeAbsoluteUrl(raw);
-		if (abs && isLikelyChannelUrl(abs)) return coerceChannelUrlToCurrentOrigin(abs);
-	}
-
-	for (const raw of candidates) {
-		const abs = normalizeAbsoluteUrl(raw);
-		if (abs) return abs;
-	}
-
-	return "";
-}
-
-async function fetchAuthorOgMeta(url) {
-	try {
-		const response = await fetch(url);
-		const htmlText = await response.text();
-
-		const imageRegex = /<meta\s+(?:property|name)=["']og:image["']\s+content=["']([^"']+)["'][^>]*>/i;
-		const urlRegex = /<meta\s+(?:property|name)=["']og:url["']\s+content=["']([^"']+)["'][^>]*>/i;
-
-		const imageMatch = htmlText.match(imageRegex);
-		const urlMatch = htmlText.match(urlRegex);
-
-		const ogImage = imageMatch ? String(imageMatch[1]).replace(/&amp;/g, '&') : "";
-		const ogUrl = urlMatch ? String(urlMatch[1]).replace(/&amp;/g, '&') : "";
-
-		return {
-			ogImage: normalizeAbsoluteUrl(ogImage),
-			ogUrl: normalizeAbsoluteUrl(ogUrl)
-		};
-	} catch (error) {
-		console.error("Failed to fetch author meta:", error);
-		return { ogImage: "", ogUrl: "" };
-	}
-}
-
-async function resolveAuthorMeta(authorUrl) {
-	const key = normalizeAbsoluteUrl(authorUrl);
-	if (!key) return { channelUrl: "", avatarUrl: "" };
-
-	const cached = authorMetaCache.get(key);
-	if (cached) return cached;
-
-	const pending = pendingAuthorMetaFetches.get(key);
-	if (pending) return pending;
-
-	const promise = (async () => {
-		const meta = await fetchAuthorOgMeta(key);
-		const rawChannelUrl = (meta.ogUrl && isLikelyChannelUrl(meta.ogUrl)) ? meta.ogUrl : key;
-		const resolvedChannelUrl = coerceChannelUrlToCurrentOrigin(rawChannelUrl);
-		const avatarUrl = meta.ogImage || "";
-		const resolved = { channelUrl: resolvedChannelUrl, avatarUrl };
-		authorMetaCache.set(key, resolved);
-		if (resolvedChannelUrl && resolvedChannelUrl !== key) {
-			authorMetaCache.set(resolvedChannelUrl, resolved);
-		}
-		return resolved;
-	})();
-
-	pendingAuthorMetaFetches.set(key, promise);
-	try {
-		return await promise;
-	} finally {
-		pendingAuthorMetaFetches.delete(key);
-	}
-}
-
-function scheduleAuthorMetaSync(expectedTrackKey, expectedUrl) {
-	const authorUrl = getAuthorChannelUrl();
-	if (!authorUrl) return;
-
-	const cached = authorMetaCache.get(authorUrl);
-	if (cached && cached.avatarUrl && cached.channelUrl) return;
-
-	void (async () => {
-		const resolved = await resolveAuthorMeta(authorUrl);
-		if (!resolved || (!resolved.avatarUrl && !resolved.channelUrl)) return;
-
-		// Drop stale updates.
-		if (lastSentTrackKey !== expectedTrackKey) return;
-		if (lastSentUrl !== expectedUrl) return;
-
-		const needsUrlUpdate = resolved.channelUrl && resolved.channelUrl !== (lastSentAuthorUrl || "");
-		const needsAvatarUpdate = resolved.avatarUrl && resolved.avatarUrl !== (lastSentAuthorAvatar || "");
-		if (!needsUrlUpdate && !needsAvatarUpdate) return;
-
-		const currentlyPlaying = isMusicCurrentlyPlaying();
-		const action = currentlyPlaying ? "VIDEO_RESUMED" : "VIDEO_PAUSED";
-		const title = getCleanTitle() || lastSentTitle;
-		const authorData = getAuthorData();
-		const thumbnail = getThumbnailUrl() || lastSentThumbnail || "youtubemusic";
-
-		const payload = {
-			url: window.location.href,
-			title,
-			author: authorData.name || lastSentAuthor || "YouTube Music",
-			author_url: resolved.channelUrl || lastSentAuthorUrl || authorUrl,
-			author_avatar: resolved.avatarUrl || lastSentAuthorAvatar || "youtubemusic",
-			thumbnail,
-			time: getCurrentTime(),
-			duration: getDuration(),
-			timestamp: new Date().toISOString(),
-		};
-
-		lastSentUrl = payload.url;
-		lastSentTitle = payload.title;
-		lastSentAuthor = payload.author;
-		lastSentAuthorUrl = payload.author_url;
-		lastSentAuthorAvatar = payload.author_avatar;
-		lastSentThumbnail = thumbnail;
-		lastSentTime = payload.time;
-		lastSentPlaying = currentlyPlaying;
-
-		browser.runtime.sendMessage({ action, payload });
-	})();
-}
 
 function getStableTrackKey() {
 	const queueItem = getQueueItem();
@@ -362,23 +189,17 @@ async function sendToBackground(action, isNewTrack = false) {
 	const title = getCleanTitle();
 	if (!title) return;
 
-	const previousUrl = lastSentUrl;
-	const previousAuthorUrl = lastSentAuthorUrl;
 	const authorData = getAuthorData();
 	const currentUrl = window.location.href;
-	const authorChannelUrl = getAuthorChannelUrl();
 	const thumbnail = getThumbnailUrl() || "youtubemusic";
 	const currentTrackKey = getStableTrackKey();
-	const cachedMeta = authorChannelUrl ? authorMetaCache.get(authorChannelUrl) : null;
-	const resolvedAuthorUrl = (cachedMeta && cachedMeta.channelUrl) ? cachedMeta.channelUrl : (authorChannelUrl || authorData.url || "");
-	const resolvedAuthorAvatar = (cachedMeta && cachedMeta.avatarUrl) ? cachedMeta.avatarUrl : "youtubemusic";
 
 	const payload = {
 		url: currentUrl,
 		title,
 		author: authorData.name || "YouTube Music",
-		author_url: resolvedAuthorUrl || "",
-		author_avatar: resolvedAuthorAvatar,
+		author_url: authorData.url || "",
+		author_avatar: "youtubemusic",
 		thumbnail,
 		time: isNewTrack ? 0 : getCurrentTime(),
 		duration: isNewTrack ? getDuration() : getDuration(),
@@ -390,7 +211,6 @@ async function sendToBackground(action, isNewTrack = false) {
 	lastSentThumbnail = thumbnail;
 	lastSentAuthor = payload.author;
 	lastSentAuthorUrl = payload.author_url;
-	lastSentAuthorAvatar = payload.author_avatar;
 	lastSentPlaying = (action === "VIDEO_RESUMED");
 	lastSentTrackKey = currentTrackKey;
 	lastSentTime = payload.time;
@@ -402,10 +222,6 @@ async function sendToBackground(action, isNewTrack = false) {
 		action,
 		payload
 	});
-
-	if (currentUrl !== previousUrl || payload.author_url !== previousAuthorUrl || isNewTrack) {
-		scheduleAuthorMetaSync(currentTrackKey, currentUrl);
-	}
 }
 
 async function checkMetadataConsistency() {
@@ -418,14 +234,13 @@ async function checkMetadataConsistency() {
 	const currentUrl = window.location.href;
 	const currentThumbnail = getThumbnailUrl();
 	const authorData = getAuthorData();
-	const currentAuthorUrl = getAuthorChannelUrl();
     const currentTrackKey = getStableTrackKey();
 	const currentTime = getCurrentTime();
 
 	const titleChanged = currentTitle !== lastSentTitle;
 	const urlChanged = currentUrl !== lastSentUrl;
 	const thumbnailChanged = (currentThumbnail || "") !== (lastSentThumbnail || "");
-	const authorChanged = (authorData.name || "") !== (lastSentAuthor || "") || (currentAuthorUrl || "") !== (lastSentAuthorUrl || "");
+	const authorChanged = (authorData.name || "") !== (lastSentAuthor || "") || (authorData.url || "") !== (lastSentAuthorUrl || "");
 	const timeChanged = Math.abs(currentTime - lastSentTime) > 3;
 
 	
@@ -531,7 +346,6 @@ async function handleNavigation() {
 	lastSentThumbnail = "";
 	lastSentAuthor = "";
 	lastSentAuthorUrl = "";
-	lastSentAuthorAvatar = "";
 	lastSentPlaying = null;
 	lastSentTrackKey = "";
 	lastBrowsingActivityKey = null;

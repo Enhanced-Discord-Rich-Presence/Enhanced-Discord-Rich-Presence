@@ -2,6 +2,10 @@
   "date": "2026-03-6",
   "bugs": [
     {
+    "title": "Activity Type \"Playing\"",
+    "description": "The activity type \"Playing\" currently does NOT work. The selection of this Type is currently disabled on the newest version."
+    },
+    {
       "title": "Youtube: Multiple Channels",
       "description": "If the playing Youtube Video has multiple channels, it will say \"Unknown Author\"."
     },

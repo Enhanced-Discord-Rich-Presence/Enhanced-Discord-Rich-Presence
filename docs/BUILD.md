@@ -8,6 +8,13 @@ Before opening a Pull Request, please test your changes locally.
 
 If you already have the released version of Enhanced Discord Rich Presence installed, temporarily disable it to avoid conflicts with your development version.
 
+##### Steps before starting
+
+1. Duplicate either `manifest.chrome.json` or `manifest.firefox.json` (depending on your target browser).
+2. Rename the duplicated file to `manifest.json`.
+
+Once completed, proceed with the steps below.
+
 #### Firefox
 
 1. Open Firefox.
@@ -19,6 +26,21 @@ If you already have the released version of Enhanced Discord Rich Presence insta
 
 3. Under **Temporary Extensions**, click **Load Temporary Add-on...**
 4. Open the `Extension/` folder and select `manifest.json`.
+
+The extension will now be loaded using your local files.
+
+#### Chrome
+
+1. Open Chrome.
+2. Navigate to: 
+
+   ```
+   chrome://extensions/
+   ```
+
+3. In the top-right corner, toggle the **Developer mode** switch to **On**.
+4. In the top-left corner, click **Load unpacked**.
+5. Select the `Extension/` folder (the directory containing your `manifest.json` file).
 
 The extension will now be loaded using your local files.
 
@@ -36,9 +58,12 @@ click **Reload** on the extension entry in `about:debugging`.
 
 > Temporary extensions are removed automatically when Firefox is closed.
 
+> [!IMPORTANT]
+> If you change the manifest file, make sure you update both `manifest.chrome.json` and `manifest.firefox.json` and not only your local-only `manifest.json`!
+
 ---
 
-### Building the Native App
+### 1. Building the Native App
 
 If you modified anything inside `App/`, please rebuild the application and test it before opening a Pull Request.
 
@@ -69,7 +94,9 @@ After this step, confirm:
 
 ---
 
-#### 2. Build the Installer (Windows Setup)
+### 2. Build the Installer
+
+#### Windows
 
 After the app is successfully built, generate the Windows installer using the Inno Setup script.
 
@@ -118,7 +145,7 @@ This will package the application into a distributable `.exe` installer.
 
 ---
 
-#### Output
+##### Output
 
 After successful compilation, the installer will be created in:
 
@@ -131,6 +158,10 @@ Example filename:
 ```
 EnhancedRPC-<version>-windows-setup.exe
 ```
+
+#### Linux
+
+_Documentation coming soon! If you have experience setting this up on Linux, feel free to open a PR._
 
 ---
 

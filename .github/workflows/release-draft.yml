@@ -1,0 +1,127 @@
+name: Release Draft
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  VERSION: ''
+  RELEASE_DATE: ''
+  RELEASE_NOTES: ''
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+jobs:
+  general-build:
+    uses: ./.github/workflows/general-build.yml
+    with:
+      version: ${{ github.ref_name }}
+
+  windows:
+    needs: general-build
+    uses: ./.github/workflows/windows-build.yml
+    with:
+      version: ${{ github.ref_name }}
+
+  linux:
+    needs: general-build
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      version: ${{ github.ref_name }}
+
+
+  release:
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+    
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+            name: windows-installer
+            path: artifacts/windows
+    
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+            name: linux-installer
+            path: artifacts/linux
+
+      - name: Stage release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p Releases
+          find artifacts -type f \( -name "*.exe" -o -name "*.sh" \) -exec cp -f {} Releases/ \;
+          echo "Staged files in Releases/:"
+          ls -la Releases
+    
+      - name: Get version, date and changelog for release notes
+        shell: pwsh
+        run: |
+            $version = "${{ github.ref_name }}" -replace "^v", ""
+            $day = (Get-Date).Day
+            $suffix = switch ($day) {
+                1 { "st" } 21 { "st" } 31 { "st" }
+                2 { "nd" } 22 { "nd" }
+                3 { "rd" } 23 { "rd" }
+                default { "th" }
+            }
+            $currentDate = "$day$suffix $(Get-Date -Format 'MMMM yyyy')"
+
+            $releaseHeader = "## [v$version] - $currentDate"
+
+            $changelogPath = Join-Path $env:GITHUB_WORKSPACE "CHANGELOG.md"
+
+            if (Test-Path $changelogPath) {
+                $lines = Get-Content $changelogPath
+            } else {
+                $lines = @("# Changelog", "", "No changelog available.")
+            }
+
+            if ($lines.Count -gt 0 -and $lines[0] -match "^# Changelog") {
+                $releaseNotesArray = @()
+                $releaseNotesArray += $lines[0]
+                $releaseNotesArray += ""
+                $releaseNotesArray += $releaseHeader
+              if ($lines.Count -gt 1) {
+                $releaseNotesArray += $lines[1..($lines.Count - 1)]
+              }
+            } else {
+                $releaseNotesArray = @($releaseHeader, "", $lines)
+            }
+
+            $releaseNotesText = $releaseNotesArray -join "`n"
+
+            "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            "RELEASE_DATE=$currentDate" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+            "RELEASE_NOTES<<EOF" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            $releaseNotesText | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            "EOF" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+
+      - name: Create draft GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          tag_name: ${{ github.ref_name }}
+
+          name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
+
+          body: ${{ env.RELEASE_NOTES }}
+
+          generate_release_notes: true
+          append_body: true
+
+          files: |
+            Releases/*.exe
+            Releases/*.sh
