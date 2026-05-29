@@ -196,3 +196,4 @@ If you need to remove the native app and extension from your system, follow the 
 - **Chrome / Brave / Vivaldi**: [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco)
 <!-- - **Opera/GX**: [Opera Add-ons](https://addons.opera.com/)
 - **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons) -->
+
