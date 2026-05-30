@@ -138,7 +138,7 @@ function detectPageType() {
 
 function getCleanTitle() {
   const raw = document.title || "";
-  const cleaned = raw
+  let cleaned = raw
     .replace(/^\(\d+\)\s/, "")
     .replace(/\s-\sYouTube$/i, "")
     .trim();
@@ -146,6 +146,8 @@ function getCleanTitle() {
   if (!cleaned || cleaned.toLowerCase() === "youtube") {
     return null;
   }
+
+  if (cleaned.length < 2) cleaned = cleaned + ' ';
 
   return cleaned;
 }

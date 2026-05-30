@@ -63,12 +63,16 @@ function getCleanTitle() {
 	const queueItem = getQueueItem();
 	if (queueItem) {
 		const titleElement = queueItem.querySelector('.song-title');
-		const title = titleElement?.textContent?.trim();
-		if (title) return title;
+		let title = titleElement?.textContent?.trim();
+		if (title) {
+			if (title.length < 2) title = title + ' ';
+			return title;
+		}
 	}
 
-	const playerBarTitle = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar .content-info-wrapper .title')
+	let playerBarTitle = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar .content-info-wrapper .title')
 		?.textContent?.trim();
+	if (playerBarTitle && playerBarTitle.length < 2) playerBarTitle = playerBarTitle + ' ';
 	return playerBarTitle || null;
 }
 
