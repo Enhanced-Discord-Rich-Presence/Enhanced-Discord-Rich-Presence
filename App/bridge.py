@@ -620,7 +620,39 @@ def _show_manual_launch_warning():
         print(f"{title}\n{message}")
 
 if __name__ == "__main__":
+    mutex_name = "EnhancedDiscordRPC_Mutex"
+    mutex_handle = None
+
+    if platform == "windows":
+        import ctypes
+        import winerror
+        
+        mutex_handle = ctypes.windll.kernel32.CreateMutexW(None, True, f"Global\\{mutex_name}")
+        last_error = ctypes.windll.kernel32.GetLastError()
+        
+        if last_error == winerror.ERROR_ALREADY_EXISTS:
+            if mutex_handle:
+                ctypes.windll.kernel32.CloseHandle(mutex_handle)
+            sys.exit(0)
+
+    elif platform in {"linux", "macos"}:
+        import fcntl
+        lock_file_path = os.path.join(os.environ.get("TMPDIR", "/tmp"), f"{mutex_name}.lock")
+        try:
+            mutex_handle = open(lock_file_path, "w")
+            fcntl.flock(mutex_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            sys.exit(0)
+
     if len(sys.argv) < 2:
         _show_manual_launch_warning()
         sys.exit(0)
-    main()
+        
+    try:
+        main()
+    finally:
+        if platform == "windows" and mutex_handle:
+            ctypes.windll.kernel32.ReleaseMutex(mutex_handle)
+            ctypes.windll.kernel32.CloseHandle(mutex_handle)
+        elif platform in {"linux", "macos"} and mutex_handle:
+            mutex_handle.close()

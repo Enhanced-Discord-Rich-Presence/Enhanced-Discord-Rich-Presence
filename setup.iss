@@ -20,7 +20,7 @@ OutputBaseFilename=EnhancedRPC-{#MyAppVersion}-windows-setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
-CloseApplications=yes
+CloseApplications=force
 
 [Files]
 Source: "App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -36,15 +36,6 @@ Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\com.enhanced.rp
 Type: files; Name: "{app}\bridge.exe"
 
 [Code]
-function InitializeSetup(): Boolean;
-var
-  ResultCode: Integer;
-begin
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM EnhancedRPC.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  
-  Result := True;
-end;
-
 procedure ProcessManifestFile(FileName: String);
 var
   ManifestPath: String;
