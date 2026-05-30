@@ -20,7 +20,7 @@ OutputBaseFilename=EnhancedRPC-{#MyAppVersion}-windows-setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
-CloseApplications=yes
+CloseApplications=force
 
 [Files]
 Source: "App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion

@@ -18,26 +18,19 @@ Once completed, proceed with the steps below.
 #### Firefox
 
 1. Open Firefox.
-2. Navigate to:
-
-   ```
-   about:debugging#/runtime/this-firefox
-   ```
-
+2. Navigate to `about:debugging#/runtime/this-firefox`.
 3. Under **Temporary Extensions**, click **Load Temporary Add-on...**
 4. Open the `Extension/` folder and select `manifest.json`.
 
 The extension will now be loaded using your local files.
 
+> [!NOTE]
+> Temporary extensions are removed automatically when Firefox is closed. If you modify `manifest.json`, background scripts, or content scripts, you will need to click **Reload** on the extension entry in `about:debugging`.
+
 #### Chrome
 
 1. Open Chrome.
-2. Navigate to: 
-
-   ```
-   chrome://extensions/
-   ```
-
+2. Navigate to `chrome://extensions/`.
 3. In the top-right corner, toggle the **Developer mode** switch to **On**.
 4. In the top-left corner, click **Load unpacked**.
 5. Select the `Extension/` folder (the directory containing your `manifest.json` file).
@@ -46,122 +39,36 @@ The extension will now be loaded using your local files.
 
 #### Applying Changes
 
-Most UI-related changes (HTML, CSS, popup pages, etc.) can be tested by refreshing the affected page or reopening the extension popup.
-
-If you modify:
-
-- `manifest.json`
-- Background scripts
-- Content scripts
-
-click **Reload** on the extension entry in `about:debugging`.
-
-> Temporary extensions are removed automatically when Firefox is closed.
+Most UI-related changes (HTML, CSS, popup pages, etc.) can be tested by refreshing the affected page or reopening the extension popup. 
 
 > [!IMPORTANT]
-> If you change the manifest file, make sure you update both `manifest.chrome.json` and `manifest.firefox.json` and not only your local-only `manifest.json`!
+> If you make changes to your local `manifest.json`, ensure you port those updates back into both `manifest.chrome.json` and `manifest.firefox.json` before committing!
 
 ---
 
-### 1. Building the Native App
+### Build and Download the Installer
 
-If you modified anything inside `App/`, please rebuild the application and test it before opening a Pull Request.
+Instead of building the installers locally, you can generate them automatically using GitHub Actions. This will create ready-to-use packages for both Windows and Linux.
 
----
+#### Step 1: Run the Build Workflow
 
-1. Open a terminal in the `App/` directory:
+1. Navigate to your repository on GitHub and click the **Actions** tab.
+2. In the left sidebar, select the **Dev Build** workflow.
+3. Click the **Run workflow** dropdown on the right.
+4. Select the branch containing your changes.
+5. In the **version** field, enter your desired version. 
+   > [!NOTE]
+   > This should follow the standard versioning format: `v{major}.{minor}.{patch}` (e.g., `v1.0.0` or `v1.0.0_dev`).
+6. Click the green **Run workflow** button.
 
-   ```bash
-   cd App
-   ```
+#### Step 2: Download the Artifacts
 
-2. Install the project dependencies:
+1. Wait roughly 2 minutes for the workflow jobs (`prepare`, `windows`, and `linux`) to complete successfully.
+2. Click on the completed workflow run from the list.
+3. Scroll down to the **Artifacts** section at the bottom of the page.
+4. Download the generated `.zip` file for your operating system (Windows or Linux).
 
-   ```bash
-   pip install -r ../requirements.txt
-   ```
-
-3. Build the application:
-
-   ```bash
-   pyinstaller --clean bridge.spec
-   ```
-
-After this step, confirm:
-
-- `App/dist/EnhancedRPC.exe` exists
-- The build completed without errors
-
----
-
-### 2. Build the Installer
-
-#### Windows
-
-After the app is successfully built, generate the Windows installer using the Inno Setup script.
-
-> This step is required because the installer packages the application into a single, installable `.exe` file. It also sets up important system integration (such as file placement and browser native messaging registration), which cannot be done by simply running the built executable.
-
-This will package the application into a distributable `.exe` installer.
-
-##### Requirements
-
-- The built executable must exist:
-  ```
-  App/dist/EnhancedRPC.exe
-  ```
-- Inno Setup must be installed:
-  https://jrsoftware.org/isinfo.php
-
----
-
-##### Build Steps
-
-1. Go back to the project root:
-
-   ```bash
-   cd ..
-   ```
-
-2. Open the installer script:
-
-   ```
-   installer.iss
-   ```
-
-3. Compile it using one of the following methods:
-
-   **Option A — Inno Setup GUI (recommended)**  
-   - Open Inno Setup Compiler  
-   - Click File → Open  
-   - Select `installer.iss`  
-   - Click Compile  
-
-   **Option B — Command line**
-
-   ```bash
-   iscc installer.iss
-   ```
-
----
-
-##### Output
-
-After successful compilation, the installer will be created in:
-
-```
-Releases/
-```
-
-Example filename:
-
-```
-EnhancedRPC-<version>-windows-setup.exe
-```
-
-#### Linux
-
-_Documentation coming soon! If you have experience setting this up on Linux, feel free to open a PR._
+After downloading, extract the archive and install it normally as described in the [README](../README.md#-installation).
 
 ---
 
@@ -169,8 +76,7 @@ _Documentation coming soon! If you have experience setting this up on Linux, fee
 
 Make sure:
 
-- [ ] `App/dist/EnhancedRPC.exe` exists
-- [ ] The application builds without errors
-- [ ] The installer compiles successfully
-- [ ] The generated installer runs correctly
-- [ ] Your changes behave as expected
+- [ ] The GitHub Actions build workflow passes without errors.
+- [ ] The generated installer from the GitHub artifact installs and runs correctly.
+- [ ] Your extension changes behave as expected in the browser.
+- [ ] Manifest changes are synced back to `manifest.chrome.json` and `manifest.firefox.json`.

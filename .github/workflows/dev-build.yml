@@ -6,7 +6,7 @@ on:
       version:
         required: true
         type: string
-        default: dev
+        default: v1.0.0_dev
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
