@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Enhanced Discord Rich Presence",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "icons": {
-    "48": "src/icons/icon.png",
-    "96": "src/icons/icon.png"
+    "48": "src/icons/icon_48x48.png",
+    "96": "src/icons/icon_96x96.png",
+    "128": "src/icons/icon_128x128.png"
   },
     "browser_specific_settings": {
     "gecko": {
@@ -43,12 +44,12 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://*.youtube.com/*"],
+      "matches": ["*://www.youtube.com/*", "*://youtube.com/*"],
       "js": ["Activities/Youtube/data.js", "Activities/Youtube/handler.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://*.youtube.com/*", "*://music.youtube.com/*"],
+      "matches": ["*://www.youtube.com/*", "*://youtube.com/*", "*://music.youtube.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

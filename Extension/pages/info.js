@@ -275,6 +275,98 @@ async function fetchKnownBugs() {
     centerBugsPanelVertically();
 }
 
+async function getDetailedBrowserAndOS() {
+    let browserName = "Unknown Browser";
+    let browserVersion = "Unknown";
+    let osName = "Unknown OS";
+    let osVersion = "";
+    
+    const ua = navigator.userAgent;
+
+    // Dynamically extract browser from User-Agent
+    const browserMatch = ua.match(/(firefox|edg|opr|opera|chrome|safari)\/?\s*(\d+(\.\d+)*)/i);
+    if (browserMatch) {
+        browserName = browserMatch[1].charAt(0).toUpperCase() + browserMatch[1].slice(1).toLowerCase();
+        if (browserName === 'Edg') browserName = 'Edge';
+        if (browserName === 'Opr') browserName = 'Opera';
+        browserVersion = browserMatch[2];
+    }
+
+    try {
+        if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.getBrowserInfo) {
+            const browserData = await browser.runtime.getBrowserInfo();
+            browserName = browserData.name;
+            browserVersion = browserData.version;
+        }
+    } catch (e) { }
+
+    const osMatch = ua.match(/\(([^)]+)\)/);
+    if (osMatch) {
+        const osParts = osMatch[1].split(';');
+        let rawOs = osParts[0];
+        if (rawOs === "compatible" && osParts.length > 1) {
+            rawOs = osParts[1].trim();
+        }
+        osName = rawOs;
+
+        const versions = osParts.slice(1).map(p => p.trim()).filter(p => !p.toLowerCase().includes('like mac') && /[\d\._]+/.test(p));
+        if (versions.length > 0) {
+            osVersion = versions.join(', ').replace(/_/g, '.');
+        }
+
+        if (osName.toLowerCase().includes('windows nt')) {
+            osName = 'Windows';
+            if (!osVersion.toLowerCase().includes('nt')) {
+                osVersion = 'NT ' + osVersion;
+            }
+        } else if (osName.toLowerCase().includes('mac os x')) {
+            osName = 'macOS';
+        }
+    }
+
+    try {
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+            const values = await navigator.userAgentData.getHighEntropyValues(['platform', 'platformVersion', 'architecture', 'bitness', 'uaFullVersion', 'fullVersionList']);
+            if (values.platform) osName = values.platform;
+            if (values.platformVersion) osVersion = values.platformVersion;
+            if (values.architecture) {
+                osVersion += ` (${values.architecture}${values.bitness ? ` ${values.bitness}-bit` : ''})`;
+            }
+            if (values.uaFullVersion) {
+                browserVersion = values.uaFullVersion;
+            }
+            if (values.fullVersionList && values.fullVersionList.length > 0) {
+                const brand = values.fullVersionList.find(b => !b.brand.includes('Not') && !b.brand.includes('Chromium'));
+                if (brand) {
+                    browserName = brand.brand;
+                    browserVersion = brand.version;
+                }
+            } else if (navigator.userAgentData.brands) {
+                const brand = navigator.userAgentData.brands.find(b => !b.brand.includes('Not') && !b.brand.includes('Chromium'));
+                if (brand) {
+                    browserName = brand.brand;
+                }
+            }
+        }
+    } catch (e) { }
+
+    if ((!osVersion || osVersion === "") && typeof browser !== 'undefined' && browser.runtime && browser.runtime.getPlatformInfo) {
+        try {
+            const platformData = await browser.runtime.getPlatformInfo();
+            const osMap = { 'win': 'Windows', 'mac': 'macOS', 'cros': 'Chrome OS' };
+            if (osMap[platformData.os]) osName = osMap[platformData.os];
+            if (platformData.arch && osVersion.indexOf(platformData.arch) === -1) {
+                osVersion += (osVersion ? " " : "") + platformData.arch;
+            }
+        } catch(e) {}
+    }
+
+    return {
+        browserInfo: `${browserName} ${browserVersion}`.trim(),
+        osInfo: `${osName} ${osVersion}`.trim()
+    };
+}
+
 async function getDiagnosticsSnapshot() {
     let diagnostics = null;
     let versionInfo = null;
@@ -301,34 +393,9 @@ async function getDiagnosticsSnapshot() {
     }
 
     // Get browser and OS info
-    let browserInfo = '';
-    let osInfo = '';
-    
-    try {
-        const browserData = await browser.runtime.getBrowserInfo();
-        browserInfo = `${browserData.name} ${browserData.version}`;
-    } catch {
-        browserInfo = 'Unknown';
-    }
-    
-    try {
-        const platformData = await browser.runtime.getPlatformInfo();
-        const osMap = {
-            'win': 'Windows',
-            'mac': 'macOS',
-            'android': 'Android',
-            'cros': 'Chrome OS',
-            'linux': 'Linux',
-            'openbsd': 'OpenBSD',
-            'fuchsia': 'Fuchsia'
-        };
-        osInfo = osMap[platformData.os] || platformData.os;
-        if (platformData.arch) {
-            osInfo += ` (${platformData.arch})`;
-        }
-    } catch {
-        osInfo = 'Unknown';
-    }
+    const sysInfo = await getDetailedBrowserAndOS();
+    const browserInfo = sysInfo.browserInfo;
+    const osInfo = sysInfo.osInfo;
 
     const selectedByService = (diagnostics && diagnostics.rpcState && diagnostics.rpcState.selectedTabs) || {};
     const selectedEntries = Object.entries(selectedByService)
@@ -408,7 +475,7 @@ function renderDebugPanel(snapshot) {
         </div>
 
         <div class="debug-block">
-            <div class="debug-label">Firefox</div>
+            <div class="debug-label">Browser</div>
             <div class="debug-value">${escapeHtml(snapshot.browserInfo || 'Unknown')}</div>
         </div>
 
@@ -438,39 +505,9 @@ function renderDebugPanel(snapshot) {
 async function buildDebugClipboardText(snapshot) {
     const lines = [];
 
-    // Get browser and OS info
-    let browserInfo = '';
-    let osInfo = '';
-    
-    try {
-        const browserData = await browser.runtime.getBrowserInfo();
-        browserInfo = `${browserData.name} ${browserData.version}`;
-    } catch {
-        browserInfo = 'Unknown';
-    }
-    
-    try {
-        const platformData = await browser.runtime.getPlatformInfo();
-        const osMap = {
-            'win': 'Windows',
-            'mac': 'macOS',
-            'android': 'Android',
-            'cros': 'Chrome OS',
-            'linux': 'Linux',
-            'openbsd': 'OpenBSD',
-            'fuchsia': 'Fuchsia'
-        };
-        osInfo = osMap[platformData.os] || platformData.os;
-        if (platformData.arch) {
-            osInfo += ` (${platformData.arch})`;
-        }
-    } catch {
-        osInfo = 'Unknown';
-    }
-
     lines.push(`Last Update: ${snapshot.collectedAt}`);
-    lines.push(`Firefox: ${browserInfo}`);
-    lines.push(`OS: ${osInfo}`);
+    lines.push(`Browser: ${snapshot.browserInfo}`);
+    lines.push(`OS: ${snapshot.osInfo}`);
     lines.push('Versions:');
     lines.push(`Extension: ${normalizeVersion(snapshot.installedVersions.extensionVersion)} | ${normalizeVersion(snapshot.latestVersions.extensionVersion)}`);
     lines.push(`Native App: ${normalizeVersion(snapshot.installedVersions.nativeAppVersion)} | ${normalizeVersion(snapshot.latestVersions.nativeAppVersion)}`);

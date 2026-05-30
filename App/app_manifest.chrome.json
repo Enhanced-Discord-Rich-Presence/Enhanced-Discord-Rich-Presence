@@ -3,5 +3,5 @@
   "description": "Enhanced Discord Rich Presence Bridge",
   "path": "%placeholder%",
   "type": "stdio",
-  "allowed_origins": ["chrome-extension://kfplppjeldjbdlkdchemkfncjhkiagao/"]
+  "allowed_origins": ["chrome-extension://jnlnkdmjkphemglpbgamnobklkhjpkco/"]
 }

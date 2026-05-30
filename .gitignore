@@ -24,3 +24,8 @@ docs/RELEASE.md
 Extension/Extension_Chrome.zip
 Extension/Extension_Firefox.zip
 Extension/package.bat
+Extension/package_manifest.bat
+
+# Extension
+Extension.crx
+Extension.pem

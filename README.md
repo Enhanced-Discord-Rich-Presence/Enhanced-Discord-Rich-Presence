@@ -16,25 +16,23 @@
     <img src="https://img.shields.io/badge/Firefox_Add--on-FF7139?logo=firefox-browser&logoColor=white" alt="Firefox Add-on">
   </a>
 
-  <a href="https://chromewebstore.google.com/">
+  <a href="https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco">
     <img src="https://img.shields.io/badge/Chrome_Web_Store-4285F4?logo=googlechrome&logoColor=white" alt="Chrome Web Store">
   </a>
 
-  <a href="https://addons.opera.com/">
+  <!--<a href="https://addons.opera.com/">
     <img src="https://img.shields.io/badge/Opera_Add--ons-FF1B2D?logo=opera&logoColor=white" alt="Opera Add-ons">
   </a>
 
   <a href="https://microsoftedge.microsoft.com/addons">
     <img src="https://img.shields.io/badge/Edge_Add--ons-0078D7?logo=microsoftedge&logoColor=white" alt="Microsoft Edge Add-ons">
-  </a>
+  </a>--> •
 
-  <img src="https://img.shields.io/badge/•-FFFFFF?style=flat-square" alt="separator">
-
-  <a href="https://chromewebstore.google.com/">
+  <a href="https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco">
     <img src="https://img.shields.io/badge/Brave-FF4500?logo=brave&logoColor=white" alt="Brave">
   </a>
 
-  <a href="https://chromewebstore.google.com/">
+  <a href="https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco">
     <img src="https://img.shields.io/badge/Vivaldi-EF3939?logo=vivaldi&logoColor=white" alt="Vivaldi">
   </a>
 </p>
@@ -56,8 +54,8 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Extension-v1.4.0-orange"/>
-  <img src="https://img.shields.io/badge/Native-v1.10.1-orange"/>
+  <img src="https://img.shields.io/badge/Extension-v1.4.1-orange"/>
+  <img src="https://img.shields.io/badge/Native-v1.4.0-orange"/>
 </p>
 
 
@@ -107,7 +105,8 @@ Designed for quick access without descriptions.
 ## 🛠️ System Requirements
 
 - **Operating System:** Windows *10/11*, Linux *(Ubuntu, Debian, Arch, Fedora, etc.)*
-- **Browsers:** Firefox, Chrome, Opera, Edge, Brave, Vivaldi
+<!--- **Browsers:** Firefox, Chrome, Brave, Vivaldi-->
+- **Browsers:** Firefox, Chrome, Brave, Vivaldi
 - **Discord:** Stable, Canary, or PTB
 
 > `Important Linux Note:` Discord cannot be installed via Snap, Flatpak, or any other system that installs Discord in a sandbox. You must use a native package manager, `.deb`, or `.tar.gz` installation.
@@ -129,14 +128,14 @@ Designed for quick access without descriptions.
 #### Linux
 
 1. Go to the [Releases page](../../releases/latest)
-2. Download `EnhancedRPC-[version]-linux_x84_64-setup.sh `
+2. Download `EnhancedRPC-[version]-linux_x86_64-setup.sh `
 3. Open your terminal, navigate to the folder where you downloaded the file, and make it executable:
     ```bash
-    chmod +x EnhancedRPC-[version]-linux_x84_64-setup.sh 
+    chmod +x EnhancedRPC-[version]-linux_x86_64-setup.sh 
     ```
 4. Run the installer script:
    ```bash
-    ./EnhancedRPC-[version]-linux_x84_64-setup.sh
+    ./EnhancedRPC-[version]-linux_x86_64-setup.sh
    ```
 
 > [!NOTE]
@@ -149,9 +148,9 @@ Designed for quick access without descriptions.
 | Browser | download Link |
 | :--- | :--- |
 | **Firefox** | [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/) |
-| **Chrome / Brave / Vivaldi** | [Chrome Web Store](https://chromewebstore.google.com/) |
-| **Opera / Opera GX** | [Opera Add-ons Store](https://addons.opera.com/) |
-| **Edge** | [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons) |
+| **Chrome / Brave / Vivaldi** | [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco) |
+<!-- | **Opera / Opera GX** | [Opera Add-ons Store](https://addons.opera.com/) | -->
+<!-- | **Edge** | [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons) | -->
    
 ### Step 3: Verify Installation
 
@@ -174,7 +173,7 @@ If you need to remove the native app and extension from your system, follow the 
 1. Open your terminal and navigate to the folder containing the installer script.
 2. Run the script with the uninstall flag:
 ```bash
-   ./EnhancedRPC-[version]-linux_x84_64-setup.sh uninstall
+   ./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
 ```
 3. Open your browser and remove the extension from your extensions manager.
 
@@ -194,8 +193,9 @@ If you need to remove the native app and extension from your system, follow the 
 - **Issues & Bug Reports**: [GitHub Issues](../../issues)
 - **Feature Requests**: [GitHub Discussions](../../discussions)
 - **Firefox**: [Firefox Add-ons store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/)
-- **Chrome / Brave / Vivaldi**: [Chrome Web Store](https://chromewebstore.google.com)
-- **Opera/GX**: [Opera Add-ons](https://addons.opera.com/)
-- **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons)
+- **Chrome / Brave / Vivaldi**: [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco)
+<!-- - **Opera/GX**: [Opera Add-ons](https://addons.opera.com/)
+- **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons) -->
+
 
 

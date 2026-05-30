@@ -1,6 +1,7 @@
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
 const NATIVE_HOST = "com.enhanced.rpc.bridge";
+const CHROME_NATIVE_EXTENSION_ID = "jnlnkdmjkphemglpbgamnobklkhjpkco";
 let nativePort = null;
 let defaultSettings = null;
 
@@ -292,9 +293,27 @@ async function loadDefaults(forceReload = false) {
     return defaultSettings;
 }
 
+function canUseChromeNativeMessaging() {
+    try {
+        const manifest = browserAPI.runtime.getManifest();
+        const isFirefoxBuild = !!(manifest && manifest.browser_specific_settings && manifest.browser_specific_settings.gecko && manifest.browser_specific_settings.gecko.id);
+        if (isFirefoxBuild) return true;
+        return browserAPI.runtime.id === CHROME_NATIVE_EXTENSION_ID;
+    } catch {
+        return true;
+    }
+}
+
 function getNativePort() {
     if (!nativePort) {
         try {
+            if (!canUseChromeNativeMessaging()) {
+                nativeHostReachable = false;
+                if (!shouldSuppressMissingModal()) {
+                    ensureNativeMissingModal();
+                }
+                return null;
+            }
             nativePort = browserAPI.runtime.connectNative(NATIVE_HOST);
         } catch {
             nativePort = null;
@@ -613,7 +632,15 @@ function requestNative(action, extra = {}, timeoutMs = 2000) {
             }, timeoutMs);
 
             pendingNativeRequests.set(requestId, { resolve, reject, timer });
-            port.postMessage({ action, requestId, ...extra });
+            try {
+                port.postMessage({ action, requestId, ...extra });
+            } catch (postError) {
+                pendingNativeRequests.delete(requestId);
+                clearTimeout(timer);
+                nativePort = null;
+                nativeHostReachable = false;
+                reject(postError);
+            }
         } catch (e) {
             reject(e);
         }

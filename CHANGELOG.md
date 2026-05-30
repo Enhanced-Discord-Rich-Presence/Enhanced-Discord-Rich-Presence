@@ -4,14 +4,14 @@
 - added **Linux** support.
 - added Support for:
   - `Google Chrome`
-  - `Microsoft Edge`
-  - `Opera`
-  - `Opera GX`
+  - `Microsoft Edge` (coming soon)
+  - `Opera` (coming soon)
+  - `Opera GX` (coming soon)
   - `Brave`
   - `Vivaldi`
   - `Chromium*`
 
->`*`Chromium is supported, but some Browsers may have different Registry locations which makes them not work. If your browser doesn't work, feel free to open an Issue and I'll check if I can add it!
+>`*`Chromium itself is supported, but some Browsers may have different Registry locations which makes them not work. If your browser doesn't work, feel free to open an Issue and I'll check if I can add it!
 
 ### Changed
 - changed it so you can now change (or remove) the third line in `Listening` and `Competing` state.
