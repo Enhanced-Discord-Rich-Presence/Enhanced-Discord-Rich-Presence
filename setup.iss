@@ -10,7 +10,6 @@ DefaultDirName={localappdata}\Enhanced Discord RPC
 DefaultGroupName=Enhanced Discord RPC
 UninstallDisplayIcon={app}\EnhancedRPC.exe
 SetupIconFile=Extension\src\icons\icon.ico
-AppMutex=EnhancedDiscordRPC_Mutex
 Compression=lzma2
 DisableWelcomePage=no
 WizardStyle=modern
