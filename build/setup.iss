@@ -10,17 +10,16 @@ DefaultDirName={localappdata}\Enhanced Discord RPC
 DefaultGroupName=Enhanced Discord RPC
 UninstallDisplayIcon={app}\EnhancedRPC.exe
 SetupIconFile=..\Extension\src\icons\icon.ico
-AppMutex=EnhancedDiscordRPC_Mutex
 Compression=lzma2
 DisableWelcomePage=no
 WizardStyle=modern
 SolidCompression=yes
-OutputDir=../Releases
-OutputBaseFilename=EnhancedRPC-v{#MyAppVersion}-windows-setup
+OutputDir=..\Releases
+OutputBaseFilename=EnhancedRPC-{#MyAppVersion}-windows-setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
-CloseApplications=yes
+CloseApplications=no
 
 [Files]
 Source: "..\App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -32,17 +31,35 @@ Source: "..\App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversio
 Root: HKCU; Subkey: "Software\Mozilla\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.firefox.json"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
 
-Root: HKCU; Subkey: "Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Microsoft\Edge\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Vivaldi\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Opera Software\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Opera Software\Opera GX\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Chromium\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-
 [InstallDelete]
 Type: files; Name: "{app}\bridge.exe"
 
 [Code]
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  SignalPath: String;
+begin
+  Result := ''; 
+  SignalPath := ExpandConstant('{app}\terminate.signal');
+
+  if ForceDirectories(ExpandConstant('{app}')) then
+  begin
+    if SaveStringToFile(SignalPath, '', False) then
+    begin
+      Sleep(3000);
+    end;
+  end; 
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    DeleteFile(ExpandConstant('{app}\terminate.signal'));
+  end;
+end;
+
+
 procedure ProcessManifestFile(FileName: String);
 var
   ManifestPath: String;

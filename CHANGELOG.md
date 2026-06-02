@@ -2,6 +2,7 @@
 
 ### Changed
 - fixed an issue that if the video/song was only 1 character long, it woulds stop the RPC due to the title and state needing to be at least 2 characters long. Thanks to [ImHoppy](https://github.com/ImHoppy) for this PR!
+- When updating, the Installer now automatically closes the Native App.
 - If users try to manually start the .exe, it will notify them that they don't have to.
 
 
