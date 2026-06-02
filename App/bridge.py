@@ -15,6 +15,7 @@ else:
 
 if platform == "windows":
     import win32file
+    import threading
 elif platform in {"linux", "macos"}:
     import socket
 
@@ -411,7 +412,19 @@ def get_app_version() -> str:
     return ""
 
 
+def _watch_for_termination():
+    EXE_DIR = os.path.dirname(sys.executable)
+    TERMINATION_FILE = os.path.join(EXE_DIR, "terminate.signal")
+    while True:
+        if os.path.exists(TERMINATION_FILE):
+            os._exit(0)
+        time.sleep(1)
+
+
 def main():
+    if platform == "windows":
+        termination_thread = threading.Thread(target=_watch_for_termination, daemon=True)
+        termination_thread.start()
     bridge = MultiServiceBridge()
     while True:
         try:
