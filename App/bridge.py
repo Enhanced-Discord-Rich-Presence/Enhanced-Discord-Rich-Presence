@@ -15,6 +15,7 @@ else:
 
 if platform == "windows":
     import win32file
+    import threading
 elif platform in {"linux", "macos"}:
     import socket
 
@@ -411,7 +412,19 @@ def get_app_version() -> str:
     return ""
 
 
+def _watch_for_termination():
+    EXE_DIR = os.path.dirname(sys.executable)
+    TERMINATION_FILE = os.path.join(EXE_DIR, "terminate.signal")
+    while True:
+        if os.path.exists(TERMINATION_FILE):
+            os._exit(0)
+        time.sleep(1)
+
+
 def main():
+    if platform == "windows":
+        termination_thread = threading.Thread(target=_watch_for_termination, daemon=True)
+        termination_thread.start()
     bridge = MultiServiceBridge()
     while True:
         try:
@@ -590,6 +603,37 @@ def main():
         except Exception:
             pass
 
+def _show_manual_launch_warning():
+    title = "Enhanced Discord Rich Presence"
+    message = (
+        "This is a Native Messaging Host for the Enhanced Discord Rich Presence extension.\n\n"
+        "It is meant to be launched automatically by the browser, not manually.\n"
+        "You do not need to keep this open or run it yourself."
+    )
+
+    if platform == "windows":
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(0, message, title, 0x40 | 0x0)
+        
+    elif platform == "linux":
+        import subprocess
+
+        if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+            for cmd in (
+                ["notify-send", title, message],
+                ["zenity", "--info", f"--title={title}", f"--text={message}"],
+                ["kdialog", "--msgbox", message],
+            ):
+                try:
+                    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    return
+                except (FileNotFoundError, subprocess.CalledProcessError):
+                    continue
+
+        print(f"{title}\n{message}")
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        _show_manual_launch_warning()
+        sys.exit(0)
     main()

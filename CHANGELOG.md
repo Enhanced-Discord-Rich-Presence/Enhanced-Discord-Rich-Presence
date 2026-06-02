@@ -1,39 +1,18 @@
 # Changelog
 
-### Added
-- added **Linux** support.
-- added Support for:
-  - `Google Chrome`
-  - `Microsoft Edge` (coming soon)
-  - `Opera` (coming soon)
-  - `Opera GX` (coming soon)
-  - `Brave`
-  - `Vivaldi`
-  - `Chromium*`
-
->`*`Chromium itself is supported, but some Browsers may have different Registry locations which makes them not work. If your browser doesn't work, feel free to open an Issue and I'll check if I can add it!
-
 ### Changed
-- changed it so you can now change (or remove) the third line in `Listening` and `Competing` state.
+- fixed an issue that if the video/song was only 1 character long, it woulds stop the RPC due to the title and state needing to be at least 2 characters long. Thanks to [ImHoppy](https://github.com/ImHoppy) for this PR!
+- When updating, the Installer now automatically closes the Native App.
+- If users try to manually start the .exe, it will notify them that they don't have to.
+
 
 ## Repository Changelog
 
 ### Added
-- added a github workflow to build and publish new versions more easily.
-- added `.github/FUNDING.yml` if you want to support this project <3
-- created and added `install-template-linux.sh` in new `build/` folder.
-- added `BUILD.md` in `docs/`.
-- added `CONTRIBUTING.md`.
+- Added a Dev Build workflow for easier testing of new versions.
 
 ### Changed
-- Releases are now done automatically via github workflow.
-- Releases were made a bit more cleanly.
-- swapped (previously hidden) `changelog.txt` into (public) `CHANGELOG.md`.
-- moved `setup.iss` into `build/`.
-- moved `Discord_IPC.md` to `docs/`.
-- adjusted `.gitignore` to have some IDE things
-- adjusted `Bug report` Issue template to contain information about Linux.
-
+- Updated `docs/BUILD.md` to contain the new building information using the Dev Build workflow.
 
 ## Known Issues
 
