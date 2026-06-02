@@ -35,6 +35,32 @@ Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\com.enhanced.rp
 Type: files; Name: "{app}\bridge.exe"
 
 [Code]
+procedure PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  SignalPath: String;
+begin
+  MsgBox('PrepareToInstall called', mbInformation, MB_OK);
+  Result := '';
+  SignalPath := ExpandConstant('{app}\terminate.signal');
+
+  if ForceDirectories(ExpandConstant('{app}')) then
+  begin
+    if SaveStringToFile(SignalPath, 'QUIT', False) then
+    begin
+      Sleep(2000);
+    end;
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    DeleteFile(ExpandConstant('{app}\terminate.signal'));
+  end;
+end;
+
+
 procedure ProcessManifestFile(FileName: String);
 var
   ManifestPath: String;
@@ -66,28 +92,4 @@ end;
 procedure UpdateChromeManifestPath();
 begin
   ProcessManifestFile('app_manifest.chrome.json');
-end;
-
-function PrepareToInstall(var NeedsRestart: Boolean): String;
-var
-  SignalPath: String;
-begin
-  Result := '';
-  SignalPath := ExpandConstant('{app}\terminate.signal');
-
-  if ForceDirectories(ExpandConstant('{app}')) then
-  begin
-    if SaveStringToFile(SignalPath, 'QUIT', False) then
-    begin
-      Sleep(2000);
-    end;
-  end;
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    DeleteFile(ExpandConstant('{app}\terminate.signal'));
-  end;
 end;
