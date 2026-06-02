@@ -1,4 +1,4 @@
-#define FileHandle FileOpen("App\version.txt")
+#define FileHandle FileOpen("..\App\version.txt")
 #define MyAppVersion FileRead(FileHandle)
 #expr FileClose(FileHandle)
 
@@ -9,12 +9,12 @@ AppVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Enhanced Discord RPC
 DefaultGroupName=Enhanced Discord RPC
 UninstallDisplayIcon={app}\EnhancedRPC.exe
-SetupIconFile=Extension\src\icons\icon.ico
+SetupIconFile=..\Extension\src\icons\icon.ico
 Compression=lzma2
 DisableWelcomePage=no
 WizardStyle=modern
 SolidCompression=yes
-OutputDir=Releases
+OutputDir=..\Releases
 OutputBaseFilename=EnhancedRPC-{#MyAppVersion}-windows-setup
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -22,10 +22,10 @@ PrivilegesRequired=lowest
 CloseApplications=no
 
 [Files]
-Source: "App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "App\app_manifest.firefox.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateFirefoxManifestPath
-Source: "App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateChromeManifestPath
+Source: "..\App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\App\app_manifest.firefox.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateFirefoxManifestPath
+Source: "..\App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateChromeManifestPath
 
 [Registry]
 Root: HKCU; Subkey: "Software\Mozilla\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.firefox.json"; Flags: uninsdeletekey
