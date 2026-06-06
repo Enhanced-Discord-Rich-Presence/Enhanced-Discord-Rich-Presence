@@ -47,9 +47,9 @@
     <img src="https://img.shields.io/badge/Linux-333333?style=flat&logo=linux&logoColor=white" alt="Linux">
   </a>
 
-  <a href="https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/releases">
-    <img src="https://img.shields.io/github/downloads/total/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence?style=flat-square&color=blue" alt="Total Downloads">
-  </a>
+<a href="https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/releases">
+  <img src="https://img.shields.io/github/downloads/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/total?style=flat-square&color=blue" alt="Total Downloads">
+</a>
 </p>
 
 
