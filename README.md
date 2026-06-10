@@ -172,9 +172,9 @@ If you need to remove the native app and extension from your system, follow the 
 #### Linux
 1. Open your terminal and navigate to the folder containing the installer script.
 2. Run the script with the uninstall flag:
-```bash
-   ./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
-```
+  ```bash
+  ./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
+  ```
 3. Open your browser and remove the extension from your extensions manager.
 
 ### Troubleshooting
