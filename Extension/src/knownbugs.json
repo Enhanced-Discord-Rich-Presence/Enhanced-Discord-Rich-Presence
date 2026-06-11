@@ -10,10 +10,6 @@
       "description": "If a YouTube or YouTube Music ad is playing, it will show the time of the ad and might not re-fix itself after the ad is done."
     },
     {
-      "title": "Youtube Music: Author Image",
-      "description": "Sometimes the YouTube Music Author image doesn't properly load, so it will default to the YT Music logo."
-    },
-    {
       "title": "Youtube: Multiple Channels",
       "description": "If the playing Youtube Video has multiple channels, it will say \"Unknown Author\"."
     },
