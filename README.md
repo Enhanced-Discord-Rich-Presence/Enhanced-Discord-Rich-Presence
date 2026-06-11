@@ -48,7 +48,7 @@
   </a>
 
 <a href="https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/releases">
-  <img src="https://img.shields.io/github/downloads/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/total?style=flat-square&color=blue&v=2" alt="Total Downloads">
+  <img src="https://img.shields.io/github/downloads/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/total?style=flat-square&color=blue&cacheSeconds=3600" alt="Total Downloads">
 </a>
 </p>
 
@@ -172,9 +172,9 @@ If you need to remove the native app and extension from your system, follow the 
 #### Linux
 1. Open your terminal and navigate to the folder containing the installer script.
 2. Run the script with the uninstall flag:
-```bash
-   ./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
-```
+  ```bash
+  ./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
+  ```
 3. Open your browser and remove the extension from your extensions manager.
 
 ### Troubleshooting
