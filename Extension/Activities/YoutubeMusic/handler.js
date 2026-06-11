@@ -434,6 +434,17 @@ browsingActivityCheckInterval = setInterval(() => {
 	checkBrowsingActivity();
 }, 1000);
 
+window.addEventListener('beforeunload', () => {
+    try {
+        browser.runtime.sendMessage({
+            action: "CLEAR_RPC",
+            reason: "page_navigation",
+            currentSite: "YoutubeMusic"
+        });
+    } catch (e) {
+    }
+});
+
 browser.runtime.onMessage.addListener(async (message) => {
 	if (message.action === "REQUEST_SYNC") {
 		// Ensure we have the latest settings before we decide what to send
