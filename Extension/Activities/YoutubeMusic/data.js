@@ -63,41 +63,88 @@ function getCleanTitle() {
 	const queueItem = getQueueItem();
 	if (queueItem) {
 		const titleElement = queueItem.querySelector('.song-title');
-		const title = titleElement?.textContent?.trim();
-		if (title) return title;
+		let title = titleElement?.textContent?.trim();
+		if (title) {
+			if (title.length < 2) title = title + ' ';
+			return title;
+		}
 	}
 
-	const playerBarTitle = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar .content-info-wrapper .title')
+	let playerBarTitle = document.querySelector('ytmusic-player-bar .title, ytmusic-player-bar .content-info-wrapper .title')
 		?.textContent?.trim();
+	if (playerBarTitle && playerBarTitle.length < 2) playerBarTitle = playerBarTitle + ' ';
 	return playerBarTitle || null;
 }
 
-function getAuthorData() {
-	const queueItem = getQueueItem();
-	if (!queueItem) {
-		const playerBar = document.querySelector('ytmusic-player-bar');
-		const playerBylineLink = playerBar?.querySelector('.byline a, .content-info-wrapper .byline a');
-		const playerBylineText = playerBylineLink?.textContent?.trim()
-			|| playerBar?.querySelector('.byline, .content-info-wrapper .byline')?.textContent?.trim()
-			|| "YouTube Music";
+const authorImageCache = new Map();
 
-		const playerArtist = String(playerBylineText).split(/[•·]/)[0].trim() || "YouTube Music";
-		return { name: playerArtist, url: playerBylineLink?.href || "", avatar: "" };
+async function getAuthorImageUrl(channelUrl) {
+  if (!channelUrl) return null;
+  
+  if (authorImageCache.has(channelUrl)) {
+    return authorImageCache.get(channelUrl);
+  }
+
+  try {
+    const response = await fetch(channelUrl);
+    const htmlText = await response.text();
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+    const imageUrl = doc.querySelector('meta[property="og:image"]')?.content || null;
+    
+    authorImageCache.set(channelUrl, imageUrl);
+    return imageUrl;
+  } catch (error) {
+    console.error(`Failed to fetch author image for ${channelUrl}:`, error);
+    authorImageCache.set(channelUrl, null); 
+    return null;
+  }
+}
+
+async function getAuthorData() {
+	const queueItem = getQueueItem();
+	const playerBar = document.querySelector('ytmusic-player-bar');
+	
+	let artistName = "YouTube Music";
+	let artistUrl = "";
+
+	if (queueItem) {
+		const bylineElement = queueItem.querySelector('.byline');
+		const artistLink = bylineElement?.querySelector('a');
+		const rawArtistName = artistLink?.textContent?.trim()
+			|| bylineElement?.textContent?.trim()
+			|| "";
+		if (rawArtistName) {
+			artistName = String(rawArtistName).split(/[•·]/)[0].trim() || "YouTube Music";
+		}
+	}
+	
+	if (artistName === "YouTube Music" && playerBar) {
+		const playerBylineText = playerBar?.querySelector('.byline, .content-info-wrapper .byline')?.textContent?.trim() || "";
+		if (playerBylineText) {
+			artistName = String(playerBylineText).split(/[•·]/)[0].trim() || "YouTube Music";
+		}
 	}
 
-	const bylineElement = queueItem.querySelector('.byline');
-	const artistLink = bylineElement?.querySelector('a');
+	if (playerBar) {
+		const channelLink = [...playerBar.querySelectorAll('a')].find(a => a.href && a.href.includes('/channel/'));
+		if (channelLink) {
+			artistUrl = channelLink.href;
+		}
+	}
+	
+	if (!artistUrl && queueItem) {
+		const bylineElement = queueItem.querySelector('.byline');
+		const artistLink = bylineElement?.querySelector('a');
+		if (artistLink?.href) {
+			artistUrl = artistLink.href;
+		}
+	}
 
-	const rawArtistName = artistLink?.textContent?.trim()
-		|| bylineElement?.textContent?.trim()
-		|| "YouTube Music";
+	const avatar = await getAuthorImageUrl(artistUrl);
 
-	// Remove extra metadata like view/like counts (separated by these nice lookin bullets)
-	const artistName = String(rawArtistName).split(/[•·]/)[0].trim() || "YouTube Music";
-
-	const artistUrl = artistLink?.href || "";
-
-	return { name: artistName, url: artistUrl, avatar: "" };
+	return { name: artistName, url: artistUrl, avatar: avatar || "" };
 }
 
 function getThumbnailUrl() {

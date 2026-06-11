@@ -961,8 +961,8 @@ function showTooltip(icon) {
               <span class="tag-pill">%thumbnail%</span>
               <span class="tag-pill">%url%</span>
               <span class="tag-pill">%author%</span>
-              ${isYoutubeMusic ? '' : '<span class="tag-pill">%author_avatar%</span>'}
-              ${isYoutubeMusic ? '' : '<span class="tag-pill">%author_url%</span>'}
+              <span class="tag-pill">%author_avatar%</span>
+              <span class="tag-pill">%author_url%</span>
             </div>
         `;
     }

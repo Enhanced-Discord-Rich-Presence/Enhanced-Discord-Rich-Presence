@@ -40,7 +40,7 @@ browser.storage.onChanged.addListener((changes, area) => {
 	if (changes.rpcYoutubeMusic) cachedRpcYoutubeMusic = changes.rpcYoutubeMusic.newValue;
 });
 
-function getStableTrackKey() {
+async function getStableTrackKey() {
 	const queueItem = getQueueItem();
 	const fromQueue = queueItem?.getAttribute?.('video-id') || queueItem?.dataset?.videoId || '';
 	const fromUrl = new URLSearchParams(window.location.search).get('v') || '';
@@ -48,7 +48,8 @@ function getStableTrackKey() {
 	if (videoId) return `vid:${videoId}`;
 
 	const title = (getCleanTitle() || '').trim().toLowerCase();
-	const author = (getAuthorData().name || '').trim().toLowerCase();
+	const authorData = await getAuthorData();
+    const author = (authorData?.name || '').trim().toLowerCase();
 	return `${title}::${author}`;
 }
 
@@ -193,17 +194,17 @@ async function sendToBackground(action, isNewTrack = false) {
 	const title = getCleanTitle();
 	if (!title) return;
 
-	const authorData = getAuthorData();
+	const authorData = await getAuthorData();
 	const currentUrl = window.location.href;
 	const thumbnail = getThumbnailUrl() || "youtubemusic";
-	const currentTrackKey = getStableTrackKey();
+	const currentTrackKey = await getStableTrackKey();
 
 	const payload = {
 		url: currentUrl,
 		title,
 		author: authorData.name || "YouTube Music",
 		author_url: authorData.url || "",
-		author_avatar: "youtubemusic",
+		author_avatar: authorData.avatar || "youtubemusic",
 		thumbnail,
 		time: isNewTrack ? 0 : getCurrentTime(),
 		duration: isNewTrack ? getDuration() : getDuration(),
@@ -245,8 +246,8 @@ async function checkMetadataConsistency() {
 		const currentTitle = getCleanTitle();
 		const currentUrl = window.location.href;
 		const currentThumbnail = getThumbnailUrl();
-		const authorData = getAuthorData();
-		const currentTrackKey = getStableTrackKey();
+		const authorData = await getAuthorData();
+		const currentTrackKey = await getStableTrackKey();
 		const currentTime = getCurrentTime();
 
 		const titleChanged = currentTitle !== lastSentTitle;
@@ -265,7 +266,7 @@ async function checkMetadataConsistency() {
 		const isDataValid = !!currentTitle;
 
 		if (hasSignificantChange && isDataValid) {
-			sendToBackground(currentlyPlaying ? "VIDEO_RESUMED" : "VIDEO_PAUSED", isNewTrack);
+			await sendToBackground(currentlyPlaying ? "VIDEO_RESUMED" : "VIDEO_PAUSED", isNewTrack);
 
 			
 			if (informationPopups && isNewTrack) {
