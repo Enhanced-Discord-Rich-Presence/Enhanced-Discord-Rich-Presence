@@ -306,12 +306,29 @@ function setupVideoEventListeners() {
 	const video = document.querySelector('video');
 	if (!video) return;
 
+	const metadataEvents = [
+		'ended',
+		'loadeddata',
+		'loadedmetadata',
+		'canplay',
+		'playing',
+		'play',
+		'pause',
+		'durationchange',
+		'emptied'
+	];
+
 	// Remove existing listeners if any to avoid duplicates
 	if (video._ytmusicSeekHandler) {
 		video.removeEventListener('seeked', video._ytmusicSeekHandler);
 	}
 	if (video._ytmusicTimeUpdateHandler) {
 		video.removeEventListener('timeupdate', video._ytmusicTimeUpdateHandler);
+	}
+	if (video._ytmusicMetadataEventHandler) {
+		for (const eventName of metadataEvents) {
+			video.removeEventListener(eventName, video._ytmusicMetadataEventHandler);
+		}
 	}
 
 	// Handle seeking - immediately update time
@@ -331,13 +348,25 @@ function setupVideoEventListeners() {
 		if (now - lastTimeUpdate > 5000) { // Only update every 5 seconds
 			lastTimeUpdate = now;
 			const queueItem = getQueueItem();
-			if (queueItem && lastSentPlaying !== null) {
+			if (queueItem) {
 				checkMetadataConsistency();
 			}
 		}
 	};
 	video._ytmusicTimeUpdateHandler = timeUpdateHandler;
 	video.addEventListener('timeupdate', timeUpdateHandler);
+
+	// Hidden Firefox tabs may miss polling windows, so also react to media state transitions.
+	const metadataEventHandler = () => {
+		const queueItem = getQueueItem();
+		if (queueItem && lastSentPlaying !== null) {
+			checkMetadataConsistency();
+		}
+	};
+	video._ytmusicMetadataEventHandler = metadataEventHandler;
+	for (const eventName of metadataEvents) {
+		video.addEventListener(eventName, metadataEventHandler);
+	}
 }
 
 async function handleNavigation() {

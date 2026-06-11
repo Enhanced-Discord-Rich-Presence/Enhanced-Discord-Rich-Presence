@@ -14,10 +14,6 @@
       "description": "Sometimes the YouTube Music Author image doesn't properly load, so it will default to the YT Music logo."
     },
     {
-      "title": "Youtube Music: Incorrect Remaining Time",
-      "description": "Sometimes when YouTube Music is in the background, it shows the wrong remaining time after a song ends and the next one starts."
-    },
-    {
       "title": "Youtube: Multiple Channels",
       "description": "If the playing Youtube Video has multiple channels, it will say \"Unknown Author\"."
     },
