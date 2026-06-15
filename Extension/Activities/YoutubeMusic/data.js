@@ -182,12 +182,16 @@ function getCurrentTime() {
 	const video = document.querySelector('video');
 	if (video && video.readyState >= 1) return video.currentTime;
 
-	// Fallback: parse the player-bar time text
 	const timeInfo = document.querySelector('ytmusic-player-bar .time-info');
 	if (!timeInfo) return 0;
 	const text = timeInfo.textContent || "";
-	const match = text.match(/^[\s]*([^\s/]+)/);
-	return match ? parseTimeString(match[1]) : 0;
+	const parts = text.split('/');
+
+	if (parts.length >= 1) {
+	return parseTimeString(parts[0].trim());
+	}
+
+	return 0;
 }
 
 function detectPageType() {

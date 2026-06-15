@@ -261,8 +261,8 @@ async function checkMetadataConsistency() {
 		const playStateChanged = lastSentPlaying !== null && currentlyPlaying !== lastSentPlaying;
 
 		
-		const isNewTrack = currentTrackKey !== lastSentTrackKey;
-		const hasSignificantChange = isNewTrack || playStateChanged || authorChanged || titleChanged || urlChanged || thumbnailChanged || (timeChanged && !isNewTrack);
+ 		const isNewTrack = currentTrackKey !== lastSentTrackKey || titleChanged || urlChanged;
+		const hasSignificantChange = isNewTrack || playStateChanged || authorChanged || thumbnailChanged || (timeChanged && !isNewTrack);
 		const isDataValid = !!currentTitle;
 
 		if (hasSignificantChange && isDataValid) {
