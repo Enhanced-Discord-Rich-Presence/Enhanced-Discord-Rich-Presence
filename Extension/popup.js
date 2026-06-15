@@ -1,6 +1,7 @@
 let state = {
     rpcEnabled: true,
     popupsEnabled: true,
+    catJam: false,
     expandedSection: 'youtube',
     editingBrowsingActivity: null, // Track which browsing activity is being edited
     configs: {
@@ -103,6 +104,15 @@ let internalWarningHardTimeout = null;
 let versionInfoSnapshot = null;
 let versionInfoRequestInFlight = null;
 
+let catImage = document.getElementById("cat-image");
+let catJump = document.getElementById("cat-jump");
+let catPosX = Math.random() * (window.innerWidth - 100);
+let catPosY = Math.random() * (window.innerHeight - 100);
+let catSpeedX = 3;
+let catSpeedY = 3;
+
+const JAM_CAT = "assets/jam_cat_rez_0.8.png";
+const DEF_CAT = "assets/default_cat_rez_0.8.png";
 const SVGS = {
     'youtube-svg': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" fill="#FF0000"/><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#fff"/></svg>`,
     'music-svg': `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm0 19.104c-3.924 0-7.104-3.18-7.104-7.104S8.076 4.896 12 4.896s7.104 3.18 7.104 7.104-3.18 7.104-7.104 7.104z" fill="#FF0000"/><path d="M12 6.336c-3.132 0-5.664 2.532-5.664 5.664S8.868 17.664 12 17.664s5.664-2.532 5.664-5.664S15.132 6.336 12 6.336zm0 9.24c-1.968 0-3.576-1.608-3.576-3.576S10.032 8.424 12 8.424s3.576 1.608 3.576 3.576S13.968 15.576 12 15.576zm-1.44-5.28l4.08 1.704-4.08 1.704V10.296z" fill="#fff"/></svg>`,
@@ -223,6 +233,37 @@ async function isImageUrl(url) {
     }
 }
 
+function render_cat() {
+    catPosX += catSpeedX;
+    catPosY += catSpeedY;
+
+    const imageWidth = catJump.offsetWidth || 100;
+    const imageHeight = catJump.offsetHeight || 100;
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    if (catPosX + imageWidth >= screenWidth) {
+        catPosX = screenWidth - imageWidth;
+        catSpeedX = -catSpeedX;
+    } else if (catPosX <= 0) {
+        catPosX = 0;
+        catSpeedX = -catSpeedX;
+    }
+
+    if (catPosY + imageHeight >= screenHeight) {
+        catPosY = screenHeight - imageHeight;
+        catSpeedY = -catSpeedY;
+    } else if (catPosY <= 0) {
+        catPosY = 0;
+        catSpeedY = -catSpeedY;
+    }
+
+    catJump.style.left = catPosX + "px";
+    catJump.style.top = catPosY + "px";
+
+    requestAnimationFrame(render_cat);
+}
+
 function validateField(value, minBytes, maxBytes, required = false) {
     if (!value || value.trim() === '') {
         return required ? { valid: false, error: `Required (${minBytes}-${maxBytes} bytes)` } : { valid: true };
@@ -249,6 +290,7 @@ function applyValidationStyle(input, validation) {
 function render() {
     const rpcDot = document.getElementById('rpc-status-dot');
     const masterPower = document.getElementById('master-power');
+    const catPower = document.getElementById("cat-power");
     const statusInd = document.getElementById('status-indicator');
     const statusTxt = document.getElementById('status-text');
     const popupsInd = document.getElementById('popups-indicator');
@@ -288,6 +330,14 @@ function render() {
         popupsInd.style.boxShadow = "none";
         popupsTxt.innerText = "Muted";
         popupsTxt.style.color = "#4b5563";
+    }
+
+    if (!!state.catJam) {
+        catJump.hidden = false
+        catImage.src = JAM_CAT
+    } else {
+        catImage.src = DEF_CAT
+        catJump.hidden = true
     }
 
     // Platform Render
@@ -1529,6 +1579,14 @@ document.getElementById('master-power').onclick = async () => {
     render();
 };
 
+document.getElementById('cat-power').onclick = async () => {
+    state.catJam = !state.catJam;
+    await browser.storage.local.set({ catJam: state.catJam });
+    catImage = document.getElementById("cat-image")
+    
+    render();
+};
+
 document.getElementById('toggle-status').onclick = async () => {
     state.rpcEnabled = !state.rpcEnabled;
     await browser.storage.local.set({ rpcEnabled: state.rpcEnabled }); 
@@ -2039,11 +2097,14 @@ window.addEventListener('message', (event) => {
 
 
 window.onload = async () => {
+    requestAnimationFrame(render_cat);
+
     try {
         const stored = await browser.storage.local.get(null); 
 
         if (stored.rpcEnabled !== undefined) {state.rpcEnabled = stored.rpcEnabled; }
         if (stored.informationPopups !== undefined) {state.popupsEnabled = stored.informationPopups; }
+        if (stored.catJam !== undefined) {state.catJam = stored.catJam; }
 
         try {
             const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });

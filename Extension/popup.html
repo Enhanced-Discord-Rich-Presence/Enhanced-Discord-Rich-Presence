@@ -16,9 +16,14 @@
             <div id="rpc-status-dot" class="status-dot active"></div>
             Enhanced<span style="color: var(--indigo-500)">RPC</span>
         </h1>
-        <button id="master-power" class="btn-power on">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
-        </button>
+        <div class="top-btns">
+            <button id="cat-power" class="cat-btn on">
+                <img id="cat-image" class="cat-image" src="None">
+            </button>
+            <button id="master-power" class="btn-power on">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+            </button>
+        </div>
     </header>
 
     <div id="update-banner" class="update-banner" style="display:none">
@@ -67,6 +72,9 @@
         </button>
     </div>
 </div>
+
+<img id="cat-jump" class="cat-jump-img" src="assets/jam_cat_rez_0.8.png" height="50px" hidden>
+
 <script src="popup.js"></script>
 </body>
 </html>
