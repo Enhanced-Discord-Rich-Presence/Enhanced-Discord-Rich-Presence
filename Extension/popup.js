@@ -302,6 +302,7 @@ function render() {
     if (state.rpcEnabled) {
         rpcDot.className = "status-dot active";
         masterPower.className = "btn-power on";
+        catPower.className = "cat-btn on"
         statusInd.style.background = "var(--green-500)";
         statusInd.style.boxShadow = "0 0 8px var(--green-500)";
         statusTxt.innerText = "Activated";
@@ -311,6 +312,7 @@ function render() {
     } else {
         rpcDot.className = "status-dot inactive";
         masterPower.className = "btn-power off";
+        catPower.className = "cat-btn off"
         statusInd.style.background = "#374151";
         statusInd.style.boxShadow = "none";
         statusTxt.innerText = "Disabled";
