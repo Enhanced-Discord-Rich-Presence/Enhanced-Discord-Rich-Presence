@@ -1,6 +1,6 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/aqusorias)
 
-<p align="center"><img src="Extension/src/icons/icon.png" width="128" alt="MAS Logo"></p>
+<p align="center"><img src="src/Extension/src/icons/icon.png" width="128" alt="MAS Logo"></p>
 
 <h1 align="center">Enhanced Discord Rich Presence</h1>
 
