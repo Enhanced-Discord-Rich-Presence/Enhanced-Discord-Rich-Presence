@@ -36,7 +36,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: version-metadata
-          path: App/
+          path: src/App/
 
 
       - name: Set up Python
@@ -52,32 +52,32 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        working-directory: App
+        working-directory: src/App
         run: |
           python -m PyInstaller --clean bridge.spec
 
       - name: Prepare native host binary name
         run: |
           set -euo pipefail
-          if [ ! -f "App/dist/EnhancedRPC" ]; then
-            echo "Expected PyInstaller output App/dist/EnhancedRPC not found. Contents of App/dist:" >&2
-            ls -la App/dist || true
+          if [ ! -f "src/App/dist/EnhancedRPC" ]; then
+            echo "Expected PyInstaller output src/App/dist/EnhancedRPC not found. Contents of src/App/dist:" >&2
+            ls -la src/App/dist || true
             exit 1
           fi
 
-          cp -f "App/dist/EnhancedRPC" "App/dist/com.enhanced.rpc.bridge"
-          chmod +x "App/dist/com.enhanced.rpc.bridge"
+          cp -f "src/App/dist/EnhancedRPC" "src/App/dist/com.enhanced.rpc.bridge"
+          chmod +x "src/App/dist/com.enhanced.rpc.bridge"
 
 
       - name: Assemble Installer Script
         run: |
-          CHROME_JSON=$(cat App/app_manifest.chrome.json)
-          FIREFOX_JSON=$(cat App/app_manifest.firefox.json)
+          CHROME_JSON=$(cat src/App/app_manifest.chrome.json)
+          FIREFOX_JSON=$(cat src/App/app_manifest.firefox.json)
           export CHROME_JSON FIREFOX_JSON
           
           python3 -c "
           import os
-          with open('build/install-template-linux.sh', 'r') as f: text = f.read()
+          with open('src/build/install-template-linux.sh', 'r') as f: text = f.read()
           text = text.replace('__CHROME_MANIFEST_TEMPLATE__', os.environ['CHROME_JSON'])
           text = text.replace('__FIREFOX_MANIFEST_TEMPLATE__', os.environ['FIREFOX_JSON'])
           with open('temp-installer.sh', 'w') as f: f.write(text)

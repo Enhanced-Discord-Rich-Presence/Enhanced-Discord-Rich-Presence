@@ -1,32 +1,19 @@
-# IDE
 .vscode/
-.idea/
-*.swp
-*.swo
 
-# Python
 .venv/
 venv/
-__pycache__/
-*.py[cod]
-*$py.class
 
-# Build Artifacts
-App/dist/
-App/build/
-
-# Release Builds
 Releases/
+
+# Deprecated for now due to Edge being a bitch (aka their Partner Center is pretty bad and it takes soooo long for changes to get live)
+src/App/app_manifest.edge_OLD.json
+src/Extension/manifest.edge_OLD.json
 
 # Development
 docs/todo.txt
-docs/RELEASE.md
-Extension/Extension_Chrome.zip
-Extension/Extension_Firefox.zip
-Extension/package.bat
-Extension/package_manifest.bat
-Extension/manifest.json
+src/Extension/manifest.json
 
-# Extension
+
+# Others
 Extension.crx
 Extension.pem
