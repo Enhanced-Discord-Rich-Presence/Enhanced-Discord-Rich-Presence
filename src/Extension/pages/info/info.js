@@ -13,7 +13,7 @@ const bugsPanel = document.getElementById('bugs-panel');
 const bugsHeader = document.getElementById('bugs-header');
 const bugsContent = document.getElementById('bugs-content');
 
-const KNOWN_BUGS_RAW_URL = 'https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/Extension/src/knownbugs.json';
+const KNOWN_BUGS_RAW_URL = 'https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/src/Extension/src/knownbugs.json';
 
 const infoDescriptions = {
     'toggle-status': '<b>RPC Switch</b><b>Enable</b> or <b>Disable</b> Rich Presence. When off, <b>no data</b> leaves the browser. <br><small>(same as the power button)</small>',

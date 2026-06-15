@@ -10,14 +10,14 @@ MANIFEST_FILE="com.enhanced.rpc.bridge.json"
 CHROMIUM_PATHS=(
     "$HOME/.config/google-chrome/NativeMessagingHosts"
     "$HOME/.config/BraveSoftware/Brave-Browser/NativeMessagingHosts"
-    "$HOME/.config/microsoft-edge/NativeMessagingHosts"
+    #"$HOME/.config/microsoft-edge/NativeMessagingHosts" Edge disabled for now
     "$HOME/.config/vivaldi/NativeMessagingHosts"
     "$HOME/.config/opera/NativeMessagingHosts"
     "$HOME/.config/chromium/NativeMessagingHosts"
     # Flatpak variations
     "$HOME/.var/app/org.chromium.Chromium/config/Chromium/NativeMessagingHosts"
     "$HOME/.var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser/NativeMessagingHosts"
-    "$HOME/.var/app/com.microsoft.Edge/config/microsoft-edge/NativeMessagingHosts"
+    #"$HOME/.var/app/com.microsoft.Edge/config/microsoft-edge/NativeMessagingHosts"  Edge disabled for now
     "$HOME/.var/app/tv.vivaldi.Vivaldi/config/vivaldi/NativeMessagingHosts"
     # Snap variations
     "$HOME/snap/chromium/current/.config/chromium/NativeMessagingHosts"

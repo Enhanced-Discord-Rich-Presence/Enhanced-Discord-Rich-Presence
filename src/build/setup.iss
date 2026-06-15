@@ -1,4 +1,4 @@
-#define FileHandle FileOpen("..\App\version.txt")
+#define FileHandle FileOpen("..\src\App\version.txt")
 #define MyAppVersion FileRead(FileHandle)
 #expr FileClose(FileHandle)
 
@@ -9,7 +9,7 @@ AppVersion={#MyAppVersion}
 DefaultDirName={localappdata}\Enhanced Discord RPC
 DefaultGroupName=Enhanced Discord RPC
 UninstallDisplayIcon={app}\EnhancedRPC.exe
-SetupIconFile=..\Extension\src\icons\icon.ico
+SetupIconFile=..\src\Extension\src\icons\icon.ico
 Compression=lzma2
 DisableWelcomePage=no
 WizardStyle=modern
@@ -22,18 +22,18 @@ PrivilegesRequired=lowest
 CloseApplications=no
 
 [Files]
-Source: "..\App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\App\app_manifest.firefox.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateFirefoxManifestPath
-Source: "..\App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateChromeManifestPath
-Source: "..\App\app_manifest.edge.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateEdgeManifestPath
+Source: "..\src\App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\App\app_manifest.firefox.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateFirefoxManifestPath
+Source: "..\src\App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateChromeManifestPath
+;Source: "..\src\App\app_manifest.edge.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateEdgeManifestPath
 
 [Registry]
 Root: HKCU; Subkey: "Software\Mozilla\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.firefox.json"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
 
 Root: HKCU; Subkey: "Software\BraveSoftware\Brave-Browser\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
-Root: HKCU; Subkey: "Software\Microsoft\Edge\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.edge.json"; Flags: uninsdeletekey
+;Root: HKCU; Subkey: "Software\Microsoft\Edge\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.edge.json"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Vivaldi\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Opera Software\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Opera Software\Opera GX\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.chrome.json"; Flags: uninsdeletekey
@@ -101,7 +101,7 @@ begin
   ProcessManifestFile('app_manifest.chrome.json');
 end;
 
-procedure UpdateEdgeManifestPath();
-begin
-  ProcessManifestFile('app_manifest.edge.json');
-end;
+//procedure UpdateEdgeManifestPath();
+//begin
+//  ProcessManifestFile('app_manifest.edge.json');
+//end;

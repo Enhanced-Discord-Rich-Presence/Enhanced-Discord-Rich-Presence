@@ -4,8 +4,8 @@ const NATIVE_HOST = "com.enhanced.rpc.bridge";
 let nativePort = null;
 let defaultSettings = null;
 
-const UPDATE_VERSION_URL = "https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/App/version.txt";
-const EXTENSION_VERSION_URL = "https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/Extension/manifest.json";
+const UPDATE_VERSION_URL = "https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/src/App/version.txt";
+const EXTENSION_VERSION_URL = "https://raw.githubusercontent.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/main/src/Extension/manifest.json";
 const AMO_EXTENSION_PAGE_URL = "https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/";
 const UPDATE_GITHUB_URL = "https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence";
 const UPDATE_DOWNLOAD_URL = "https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/releases/latest";
@@ -1527,7 +1527,7 @@ browserAPI.runtime.onInstalled.addListener(async (details) => {
         await initializeStorage();
         try {
             await browserAPI.tabs.create({
-                url: browserAPI.runtime.getURL('pages/info.html'),
+                url: browserAPI.runtime.getURL('pages/info/info.html'),
                 active: true
             });
         } catch { }

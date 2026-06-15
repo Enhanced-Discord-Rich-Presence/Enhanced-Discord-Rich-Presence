@@ -2,6 +2,7 @@
   "manifest_version": 3,
   "name": "Enhanced Discord Rich Presence",
   "version": "1.4.7",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxrpdD9s7Q5q/IexcSIkYzFUDaG2XEi3CJOK4f0t/ozECXOn+DNAbDpU7Mb4/gB9awdbTZClMvLa11vuAI3H+qP5lXpwvUfiMnY1C2Q84HSabRD/4LudTuZFRFODOjgvFkcby/oMutSlOIODNKSXx9wSnjlKDu8mqEQ+60TH6caAtaDhjBNQkl1yfxcHu6VohhQtV+/tGFGDVUo3JnRR2FD6hT8idAgK1YtiD+mUr7G2Kxyymw6B1wl2oLNHVzKq7kqII65Fa5fHupm/Wgt6sgsWcjYOM51W3mAlou0Ij9ReWHzAI9h7sypuc9vttMSkT/mCmMHX+saWZSZdXwk+xrwIDAQAB",
   "icons": {
     "48": "src/icons/icon_48x48.png",
     "96": "src/icons/icon_96x96.png",
@@ -18,7 +19,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "pages/popup/popup.html",
     "default_title": "Monitor Settings"
   },
   "web_accessible_resources": [

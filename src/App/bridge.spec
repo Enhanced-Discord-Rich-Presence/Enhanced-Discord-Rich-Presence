@@ -3,7 +3,7 @@
 import os
 
 BASE_DIR = SPECPATH
-ICON_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'Extension', 'src', 'icons', 'icon.ico'))
+ICON_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'src', 'Extension', 'src', 'icons', 'icon.ico'))
 
 a = Analysis(
     ['bridge.py'],

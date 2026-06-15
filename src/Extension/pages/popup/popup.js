@@ -1312,7 +1312,7 @@ function attachListeners() {
     if (infoBtn) {
         infoBtn.onclick = () => {
             browser.tabs.create({
-                url: browser.runtime.getURL('pages/info.html')
+                url: browser.runtime.getURL('pages/info/info.html')
             });
         };
     }

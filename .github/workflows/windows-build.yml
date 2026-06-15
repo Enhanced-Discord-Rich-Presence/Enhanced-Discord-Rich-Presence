@@ -28,7 +28,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: version-metadata
-          path: App/
+          path: src/App/
 
           
       - name: Set up Python
@@ -43,7 +43,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build with PyInstaller
-        working-directory: App
+        working-directory: src/App
         shell: pwsh
         run: |
           python -m PyInstaller --version
@@ -53,12 +53,12 @@ jobs:
       - name: Copy version file into dist
         shell: pwsh
         run: |
-          Copy-Item -Force App/version.txt App/dist/version.txt
+          Copy-Item -Force src/App/version.txt src/App/dist/version.txt
 
       - name: Compile Inno Setup installer
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
         with:
-          path: build/setup.iss
+          path: src/build/setup.iss
 
 
       - name: Upload Windows artifact

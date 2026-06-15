@@ -7,6 +7,14 @@ on:
         required: true
         type: string
         default: v1.0.0_dev
+      platform:
+        required: true
+        type: choice
+        default: 'both'
+        options:
+          - both
+          - windows
+          - linux
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -15,8 +23,19 @@ permissions:
   contents: write
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate version input
+        run: |
+          if [[ ! "${{ inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(_[a-zA-Z0-9]+)?$ ]]; then
+            echo "Invalid version format. Expected format: vX.Y.Z (optionally with _dev suffix)."
+            exit 1
+          fi
+
   prepare:
     runs-on: ubuntu-latest
+    needs: validate
     outputs:
       version: ${{ steps.ver.outputs.version }}
     steps:
@@ -29,23 +48,25 @@ jobs:
 
       - name: Create version artifact
         run: |
-          mkdir -p App
-          echo "${{ steps.ver.outputs.version }}" > App/version.txt
+          mkdir -p src/App
+          echo "${{ steps.ver.outputs.version }}" > src/App/version.txt
 
       - name: Upload version artifact
         uses: actions/upload-artifact@v4
         with:
           name: version-metadata
-          path: App/version.txt
+          path: src/App/version.txt
 
   windows:
     needs: prepare
+    if: ${{ inputs.platform == 'both' || inputs.platform == 'windows' }}
     uses: ./.github/workflows/windows-build.yml
     with:
       version: ${{ needs.prepare.outputs.version }}
 
   linux:
     needs: prepare
+    if: ${{ inputs.platform == 'both' || inputs.platform == 'linux' }}
     uses: ./.github/workflows/linux-build.yml
     with:
       version: ${{ needs.prepare.outputs.version }}
