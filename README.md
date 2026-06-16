@@ -64,7 +64,7 @@
 <table>
   <tr>
     <td width="50%" align="center" valign="middle">
-      <img src="./Extension/src/images/main_settings_minimal.png" width="80%" alt="Extension Popup">
+      <img src="./src/Extension/src/images/main_settings_minimal.png" width="80%" alt="Extension Popup">
     </td>
     <td width="50%" valign="top">
 
@@ -86,15 +86,15 @@ Designed for quick access without descriptions.
 <table align="center">
   <tr>
     <td align="center">
-      <img src="./Extension/src/images/example_1.png" width="100%"><br>
+      <img src="./src/Extension/src/images/example_1.png" width="100%"><br>
       Detailed, visually appealing RPCs
     </td>
     <td align="center">
-      <img src="./Extension/src/images/example_2.png" width="100%"><br>
+      <img src="./src/Extension/src/images/example_2.png" width="100%"><br>
       Share your activity beyond just watching
     </td>
     <td align="center">
-      <img src="./Extension/src/images/example_3.png" width="100%"><br>
+      <img src="./src/Extension/src/images/example_3.png" width="100%"><br>
       <strong>YouTube</strong>, <strong>YouTube Music</strong> & <strong>Custom Activity</strong> support
     </td>
   </tr>
