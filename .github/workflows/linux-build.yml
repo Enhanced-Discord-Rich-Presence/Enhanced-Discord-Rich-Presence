@@ -99,7 +99,7 @@ jobs:
 
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: linux-installer
           path: Releases/*.sh

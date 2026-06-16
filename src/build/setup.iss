@@ -22,11 +22,11 @@ PrivilegesRequired=lowest
 CloseApplications=no
 
 [Files]
-Source: "..\src\App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\src\App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\src\App\app_manifest.firefox.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateFirefoxManifestPath
-Source: "..\src\App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateChromeManifestPath
-;Source: "..\src\App\app_manifest.edge.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateEdgeManifestPath
+Source: "..\App\dist\EnhancedRPC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\App\version.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\App\app_manifest.firefox.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateFirefoxManifestPath
+Source: "..\App\app_manifest.chrome.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateChromeManifestPath
+;Source: "..\App\app_manifest.edge.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: UpdateEdgeManifestPath
 
 [Registry]
 Root: HKCU; Subkey: "Software\Mozilla\NativeMessagingHosts\com.enhanced.rpc.bridge"; ValueType: string; ValueName: ""; ValueData: "{app}\app_manifest.firefox.json"; Flags: uninsdeletekey
