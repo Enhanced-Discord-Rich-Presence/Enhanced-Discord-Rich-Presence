@@ -92,7 +92,7 @@ jobs:
           "
           
           mkdir -p Releases
-          cat temp-installer.sh App/dist/com.enhanced.rpc.bridge > Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
+          cat temp-installer.sh src/App/dist/com.enhanced.rpc.bridge > Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
           chmod +x Releases/EnhancedRPC-v${{ env.VERSION }}-linux_x86_64-setup.sh
           
           rm temp-installer.sh
