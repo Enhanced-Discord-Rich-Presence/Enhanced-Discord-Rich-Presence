@@ -51,10 +51,14 @@ install() {
 
     mkdir -p "$BIN_DIR"
 
+    TMP_FILE="$BIN_DIR/.${BINARY_NAME}.tmp"
+
     PAYLOAD_LINE=$(awk '/^__PAYLOAD_BELOW__/ {print NR + 1; exit 0;}' "$0")
+
     if [ -n "$PAYLOAD_LINE" ]; then
-        tail -n +"$PAYLOAD_LINE" "$0" > "$BIN_DIR/$BINARY_NAME"
-        chmod +x "$BIN_DIR/$BINARY_NAME"
+        tail -n +"$PAYLOAD_LINE" "$0" > "$TMP_FILE"
+        chmod +x "$TMP_FILE"
+        mv -f "$TMP_FILE" "$BIN_DIR/$BINARY_NAME"
     else
         echo "Error: Extraction marker missing." >&2
         exit 1
