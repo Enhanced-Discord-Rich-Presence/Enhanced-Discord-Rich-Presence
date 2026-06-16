@@ -56,7 +56,7 @@ jobs:
           Copy-Item -Force src/App/version.txt src/App/dist/version.txt
 
       - name: Compile Inno Setup installer
-        uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.8
         with:
           path: src/build/setup.iss
 

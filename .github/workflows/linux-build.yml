@@ -33,7 +33,7 @@ jobs:
 
 
       - name: Download version artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: version-metadata
           path: src/App/
