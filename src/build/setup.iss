@@ -1,4 +1,4 @@
-#define FileHandle FileOpen("..\src\App\version.txt")
+#define FileHandle FileOpen("..\App\version.txt")
 #define MyAppVersion FileRead(FileHandle)
 #expr FileClose(FileHandle)
 
