@@ -40,6 +40,15 @@ install() {
     echo "Note: Discord cannot be installed via Snap, Flatpak, or any other system that installs Discord in a sandbox."
     echo "You must use a native package manager, .deb, or .tar.gz installation, else it probably won't work."
 
+    # Kill EnhancedRPC process if already running
+    for pid in /proc/[0-9]*; do
+        pid="${pid##*/}"
+
+        if [ -r "/proc/$pid/cmdline" ] && tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -q "$BINARY_NAME"; then
+            kill "$pid" 2>/dev/null || true
+        fi
+    done
+
     mkdir -p "$BIN_DIR"
 
     PAYLOAD_LINE=$(awk '/^__PAYLOAD_BELOW__/ {print NR + 1; exit 0;}' "$0")
@@ -67,7 +76,8 @@ __FIREFOX_MANIFEST_TEMPLATE__
 EOF
     done
 
-    echo "Installation successfully completed in user space!"
+    echo
+    echo "[SUCCESS] Installation successfully completed in user space!"
     echo "Location: $BIN_DIR/$BINARY_NAME"
 }
 
