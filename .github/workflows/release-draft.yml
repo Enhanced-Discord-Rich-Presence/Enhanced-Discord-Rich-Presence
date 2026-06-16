@@ -45,13 +45,13 @@ jobs:
           fetch-depth: 0
     
       - name: Download Windows artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
             name: windows-installer
             path: artifacts/windows
     
       - name: Download Linux artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
             name: linux-installer
             path: artifacts/linux

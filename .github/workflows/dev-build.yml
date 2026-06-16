@@ -55,7 +55,7 @@ jobs:
           echo "${{ steps.ver.outputs.version }}" > src/App/version.txt
 
       - name: Upload version artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v8
         with:
           name: version-metadata
           path: src/App/version.txt

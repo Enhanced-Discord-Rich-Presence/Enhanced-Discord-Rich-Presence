@@ -25,14 +25,14 @@ jobs:
 
 
       - name: Download version artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: version-metadata
           path: src/App/
 
           
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -62,7 +62,7 @@ jobs:
 
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v8
         with:
           name: windows-installer
           path: Releases/*.exe
