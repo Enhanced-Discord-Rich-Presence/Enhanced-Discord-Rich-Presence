@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           ref: main
           fetch-depth: 0
@@ -45,7 +45,7 @@ jobs:
         
           
       - name: Upload version artifact
-        uses: actions/upload-artifact@v8
+        uses: actions/upload-artifact@v6
         with:
           name: version-metadata
           path: src/App/version.txt
