@@ -41,6 +41,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
     
       - name: Download Windows artifact
@@ -108,15 +109,31 @@ jobs:
             $releaseNotesText | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
             "EOF" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+      - name: Create Release Branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BRANCH="v${{ env.VERSION }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+
+          git tag -f "${{ github.ref_name }}"
+          git push -f origin "${{ github.ref_name }}"
+          git push origin "$BRANCH"
+
 
       - name: Create draft GitHub release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           tag_name: ${{ github.ref_name }}
+          target_commitish: main
 
           name: "EnhancedRPC - v${{ env.VERSION }} - ${{ env.RELEASE_DATE }}"
-
           body: ${{ env.RELEASE_NOTES }}
 
           generate_release_notes: true
@@ -125,3 +142,4 @@ jobs:
           files: |
             Releases/*.exe
             Releases/*.sh
+      
