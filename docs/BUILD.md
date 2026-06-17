@@ -15,6 +15,8 @@ If you already have the released version of Enhanced Discord Rich Presence insta
 
 Once completed, proceed with the steps below.
 
+> `Pro tip:` You can also use [package_manifest.sh](../src/helpers/package_manifests.sh) to package them a little more easily and quickly!
+
 #### Firefox
 
 1. Open Firefox.
@@ -58,15 +60,17 @@ Instead of building the installers locally, you can generate them automatically 
 4. Select the branch containing your changes.
 5. In the **version** field, enter your desired version. 
    > [!NOTE]
-   > This should follow the standard versioning format: `v{major}.{minor}.{patch}` (e.g., `v1.0.0` or `v1.0.0_dev`).
-6. Click the green **Run workflow** button.
+   > This **must** follow the standard versioning format: `v{major}.{minor}.{patch}` (e.g., `v1.0.0` or `v1.0.0_dev`).
+6. Select for which **OS** it should generate the Native App Setup.
+7. Click the green **Run workflow** button.
 
 #### Step 2: Download the Artifacts
 
-1. Wait roughly 2 minutes for the workflow jobs (`prepare`, `windows`, and `linux`) to complete successfully.
+1. Wait roughly 2 minutes for the workflow jobs (`validate`, `prepare`, `windows`, and/or `linux`) to complete successfully.
 2. Click on the completed workflow run from the list.
 3. Scroll down to the **Artifacts** section at the bottom of the page.
-4. Download the generated `.zip` file for your operating system (Windows or Linux).
+   - If you can't see it, refresh the page!
+1. Download the generated `.zip` file for your operating system (Windows or Linux).
 
 After downloading, extract the archive and install it normally as described in the [README](../README.md#-installation).
 
