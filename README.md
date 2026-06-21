@@ -181,7 +181,6 @@ If you need to remove the native app and extension from your system, follow the 
 | Extension not loading | Update Firefox to the latest version and reinstall the extension |
 | Discord presence not showing | Ensure Discord is running, restart it, and confirm that media is actively playing on YouTube or YouTube Music |
 
-
 ## 🔗 Links
 
 - **GitHub Repository**: [Enhanced Discord Rich Presence](../../)
