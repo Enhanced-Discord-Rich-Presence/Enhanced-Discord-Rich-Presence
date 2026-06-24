@@ -10,7 +10,6 @@
 
 <hr>
 
-
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/">
     <img src="https://img.shields.io/badge/Firefox_Add--on-FF7139?logo=firefox-browser&logoColor=white" alt="Firefox Add-on">
@@ -37,7 +36,6 @@
   </a>
 </p>
 
-
 <p align="center">
   <a href="https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence/releases">
     <img src="https://img.shields.io/badge/Windows-0078D6?style=flat" alt="Windows">
@@ -52,14 +50,14 @@
 </a>
 </p>
 
-
 <p align="center">
   <img src="https://img.shields.io/badge/Extension-v1.4.8-orange"/>
   <img src="https://img.shields.io/badge/Native-v1.5.1-orange"/>
 </p>
 
-
-
+> [!IMPORTANT]
+> **Major Rework in Progress**
+> This project is currently undergoing a significant overhaul. Pushes to the `main` branch are temporarily paused until the refactor is complete.
 
 <table>
   <tr>
@@ -77,9 +75,10 @@ Designed for quick access without descriptions.
 - Lots of customizability
 - Ideal for everyone
 
-    </td>
-  </tr>
-</table>
+      </td>
+
+    </tr>
+  </table>
 
 <br>
 
@@ -104,7 +103,7 @@ Designed for quick access without descriptions.
 
 ## 🛠️ System Requirements
 
-- **Operating System:** Windows *10/11*, Linux *(Ubuntu, Debian, Arch, Fedora, etc.)*
+- **Operating System:** Windows _10/11_, Linux _(Ubuntu, Debian, Arch, Fedora, etc.)_
 <!--- **Browsers:** Firefox, Chrome, Brave, Vivaldi-->
 - **Browsers:** Firefox, Chrome, Brave, Vivaldi
 - **Discord:** Stable, Canary, or PTB
@@ -112,7 +111,6 @@ Designed for quick access without descriptions.
 > `Important Linux Note:` Discord cannot be installed via Snap, Flatpak, or any other system that installs Discord in a sandbox. You must use a native package manager, `.deb`, or `.tar.gz` installation.
 
 ## 🚀 Installation
-
 
 ### Step 1: Download the Native App
 
@@ -130,9 +128,9 @@ Designed for quick access without descriptions.
 1. Go to the [Releases page](../../releases/latest)
 2. Download `EnhancedRPC-[version]-linux_x86_64-setup.sh `
 3. Open your terminal, navigate to the folder where you downloaded the file, and make it executable:
-    ```bash
-    chmod +x EnhancedRPC-[version]-linux_x86_64-setup.sh 
-    ```
+   ```bash
+   chmod +x EnhancedRPC-[version]-linux_x86_64-setup.sh
+   ```
 4. Run the installer script:
    ```bash
     ./EnhancedRPC-[version]-linux_x86_64-setup.sh
@@ -145,13 +143,13 @@ Designed for quick access without descriptions.
 
 ### Step 2: Install the Extension
 
-| Browser | download Link |
-| :--- | :--- |
-| **Firefox** | [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/) |
-| **Chrome / Brave / Vivaldi** | [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco) |
-<!--| **Edge** | [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/kmmcecbdjmacdgampeegcdhebhokfofc) | -->
-<!-- | **Opera / Opera GX** | [Opera Add-ons Store](https://addons.opera.com/) | --> 
-   
+| Browser                      | download Link                                                                                           |
+| :--------------------------- | :------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | --- |
+| **Firefox**                  | [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/) |
+| **Chrome / Brave / Vivaldi** | [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco)           |
+| <!--                         | **Edge**                                                                                                | [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/kmmcecbdjmacdgampeegcdhebhokfofc) | --> |
+| <!--                         | **Opera / Opera GX**                                                                                    | [Opera Add-ons Store](https://addons.opera.com/)                                                         | --> |
+
 ### Step 3: Verify Installation
 
 1. Open the extension popup from your browser toolbar
@@ -164,28 +162,31 @@ Designed for quick access without descriptions.
 If you need to remove the native app and extension from your system, follow the steps for your operating system:
 
 #### Windows
+
 1. Open **Settings → Apps → Installed apps** (Windows 11) or **Control Panel → Programs → Programs and Features** (Windows 10).
 2. Find **EnhancedRPC** in the list.
 3. Select **Uninstall** and complete the removal process.
 4. Open your browser and remove the extension from your extensions manager.
 
 #### Linux
+
 1. Open your terminal and navigate to the folder containing the installer script.
 2. Run the script with the uninstall flag:
-  ```bash
-  ./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
-  ```
+
+```bash
+./EnhancedRPC-[version]-linux_x86_64-setup.sh uninstall
+```
+
 3. Open your browser and remove the extension from your extensions manager.
 
 ### Troubleshooting
 
-| Issue | Solution |
-|------|----------|
-| "Native app not detected" | Re-run the installer from the Releases page or verify that the native executable is correctly installed |
+| Issue                         | Solution                                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| "Native app not detected"     | Re-run the installer from the Releases page or verify that the native executable is correctly installed                             |
 | "Newer app version available" | A newer version is available on GitHub. You can ignore or mute the notification in the extension popup, but updating is recommended |
-| Extension not loading | Update Firefox to the latest version and reinstall the extension |
-| Discord presence not showing | Ensure Discord is running, restart it, and confirm that media is actively playing on YouTube or YouTube Music |
-
+| Extension not loading         | Update Firefox to the latest version and reinstall the extension                                                                    |
+| Discord presence not showing  | Ensure Discord is running, restart it, and confirm that media is actively playing on YouTube or YouTube Music                       |
 
 ## 🔗 Links
 
@@ -194,5 +195,5 @@ If you need to remove the native app and extension from your system, follow the 
 - **Feature Requests**: [GitHub Discussions](../../discussions)
 - **Firefox**: [Firefox Add-ons store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/)
 - **Chrome / Brave / Vivaldi**: [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco)
-<!-- - **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kmmcecbdjmacdgampeegcdhebhokfofc) -->
-<!-- - **Opera/GX**: [Opera Add-ons](https://addons.opera.com/)-->
+  <!-- - **Edge**: [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kmmcecbdjmacdgampeegcdhebhokfofc) -->
+  <!-- - **Opera/GX**: [Opera Add-ons](https://addons.opera.com/)-->
