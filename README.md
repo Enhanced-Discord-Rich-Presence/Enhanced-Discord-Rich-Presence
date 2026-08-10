@@ -57,9 +57,11 @@
 
 > [!IMPORTANT]
 > **Major Rework in Progress**.. kind of
+> 
 > This project is currently undergoing a significant overhaul.
 >
-> Status Update - 10th of August 2026:
+> __Status Update - 10th of August 2026__:
+> 
 > Due to a few personal reasons, I unfortunately haven't had the time or energy to keep working on this update. My plan right now is to take a short break, so new feature updates will be on pause for a while.
 >
 > That said, I'll still be checking new issues and will push out fixes right away if any major bugs or problems pop up.
