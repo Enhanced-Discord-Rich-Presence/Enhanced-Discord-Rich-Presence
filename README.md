@@ -142,7 +142,7 @@ Designed for quick access without descriptions.
    ```
 
 > [!NOTE]
-> This project has currently been tested only on Windows and Ubuntu. Other Linux distributions should work, but compatibility has not been actually verified.
+> This project has currently been tested on Windows 10/11, Ubuntu and Arch Linux. Other Linux distributions should work, but compatibility has not been explicitly verified.
 >
 > If you encounter issues on a different distribution or environment, please report it by opening a new [issue](../../issues).
 
