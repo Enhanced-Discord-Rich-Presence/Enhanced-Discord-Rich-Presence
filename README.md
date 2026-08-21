@@ -82,8 +82,6 @@ Designed for quick access without descriptions.
 - Lots of customizability
 - Ideal for everyone
 
-      </td>
-
     </tr>
   </table>
 
