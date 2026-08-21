@@ -150,12 +150,14 @@ Designed for quick access without descriptions.
 
 ### Step 2: Install the Extension
 
-| Browser                      | download Link                                                                                           |
-| :--------------------------- | :------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | --- |
-| **Firefox**                  | [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/) |
-| **Chrome / Brave / Vivaldi** | [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco)           |
-| <!--                         | **Edge**                                                                                                | [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/kmmcecbdjmacdgampeegcdhebhokfofc) | --> |
-| <!--                         | **Opera / Opera GX**                                                                                    | [Opera Add-ons Store](https://addons.opera.com/)                                                         | --> |
+| Browser | Download Link |
+| :--- | :--- |
+| **Firefox** | [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/enhanced-discord-rich-presence/) |
+| **Chrome / Brave / Vivaldi** | [Chrome Web Store](https://chromewebstore.google.com/detail/jnlnkdmjkphemglpbgamnobklkhjpkco) |
+<!-- 
+| **Edge** | [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/kmmcecbdjmacdgampeegcdhebhokfofc) |
+| **Opera / Opera GX** | [Opera Add-ons Store](https://addons.opera.com/) |
+-->
 
 ### Step 3: Verify Installation
 
