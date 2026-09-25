@@ -138,11 +138,6 @@ Designed for quick access without descriptions.
     ./EnhancedRPC-[version]-linux_x86_64-setup.sh
    ```
 
-> [!NOTE]
-> This project has currently been tested only on Windows and Ubuntu. Other Linux distributions should work, but compatibility has not been actually verified.
->
-> If you encounter issues on a different distribution or environment, please report it by opening a new [issue](../../issues).
-
 ### Step 2: Install the Extension
 
 | Browser | download Link |

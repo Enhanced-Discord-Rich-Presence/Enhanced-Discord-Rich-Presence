@@ -20,13 +20,8 @@ You will also need to install dependencies:
 pip install -r requirements.txt
 ```
 
-If you work on Windows, you will also need **Inno Setup** to build the Windows installer.
-
-- Inno Setup (used to package the application into a Windows `.exe` installer)  
-  https://jrsoftware.org/isinfo.php
-
 ### If you are working on `Extension/`
-The browser extension does **not require Python or any setup dependencies**
+The browser extension does **not require any setup dependencies**
 
 
 ---
@@ -37,7 +32,7 @@ The browser extension does **not require Python or any setup dependencies**
 
 Before making any changes, you must fork and clone the full repository:
 1. Fork the repository on Github: https://github.com/Enhanced-Discord-Rich-Presence/Enhanced-Discord-Rich-Presence
-2. Clone your fork loccally:
+2. Clone your fork locally:
     ```bash
     git clone https://github.com/YOUR_USERNAME/Enhanced-Discord-Rich-Presence.git
     cd Enhanced-Discord-Rich-Presence
